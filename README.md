@@ -1,6 +1,6 @@
-# Salt states для управления k8s кластерами
+# Salt states to manage a k8s cluster
 
-## Описание содержимого
+## Contents
 
 ### `.gitignore`
 
