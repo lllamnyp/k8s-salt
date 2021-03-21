@@ -1,0 +1,41 @@
+{%- set etcd_hosts = salt['pillar.get']('by_role:etcd') %}
+{%- set this_cluster = salt['pillar.get']('cluster') %}
+{%- set etcd_hosts = etcd_hosts | intersect(salt['pillar.get']('by_cluster:' + this_cluster)) %}
+{%- set etcd_ips = [] %}
+{%- for host in etcd_hosts %}
+{%- do etcd_ips.append(salt['mine.get'](host, 'grains.get')[host][0]) %}
+{%- endfor %}
+[Unit]
+Description=etcd
+Documentation=https://github.com/coreos
+
+[Service]
+Environment="ETCDCTL_API=3"
+Environment="ETCDCTL_CACERT=/etc/kubernetes/pki/kube-ca.pem"
+Environment="ETCDCTL_CERT=/etc/kubernetes/pki/apiserver.pem"
+Environment="ETCDCTL_KEY=/etc/kubernetes/pki/apiserver-key.pem"
+Environment="ETCDCTL_ENDPOINTS=https://127.0.0.1:2379"
+Type=notify
+ExecStart=/usr/local/bin/etcd \
+  --name=etcd-{{grains['fqdn_ip4'][0]}}  \
+  --cert-file=/etc/kubernetes/pki/apiserver.pem \
+  --key-file=/etc/kubernetes/pki/apiserver-key.pem \
+  --peer-cert-file=/etc/kubernetes/pki/apiserver.pem \
+  --peer-key-file=/etc/kubernetes/pki/apiserver-key.pem \
+  --trusted-ca-file=/etc/kubernetes/pki/kube-ca.pem \
+  --peer-trusted-ca-file=/etc/kubernetes/pki/kube-ca.pem \
+  --peer-client-cert-auth \
+  --client-cert-auth \
+  --initial-advertise-peer-urls https://{{grains['fqdn_ip4'][0]}}:2380 \
+  --listen-peer-urls https://0.0.0.0:2380 \
+  --listen-client-urls https://0.0.0.0:2379 \
+  --advertise-client-urls https://{{grains['fqdn_ip4'][0]}}:2379,https://{{grains['fqdn_ip4'][0]}}:4001 \
+  --initial-cluster-token etcd-cluster-1 \
+  --initial-cluster {% for ip in etcd_ips %}etcd-{{ip}}=https://{{ip}}:2380{% if not loop.last %},{% endif %}{% endfor %} \
+  --initial-cluster-state existing \
+  --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

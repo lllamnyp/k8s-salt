@@ -1,0 +1,18 @@
+'node1.devopslive.ru':
+  cluster: mycluster
+  roles:
+  - etcd
+  - controlplane
+  - worker
+'node2.devopslive.ru':
+  cluster: mycluster
+  roles:
+  - etcd
+  - controlplane
+  - worker
+'node3.devopslive.ru':
+  cluster: mycluster
+  roles:
+  - etcd
+  - controlplane
+  - worker
