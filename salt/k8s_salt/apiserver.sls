@@ -4,10 +4,10 @@ place_apiserver_files:
   - makedirs: True
   - names:
     - /etc/kubernetes/pki/kube-ca.pem:
-      - contents_pillar: k8s_certs:kube-ca
+      - contents_pillar: k8s_salt:certs:kube-ca
         mode: '0644'
     - /etc/kubernetes/pki/requestheader-ca.pem:
-      - contents_pillar: k8s_certs:requestheader-ca
+      - contents_pillar: k8s_salt:certs:requestheader-ca
         mode: '0644'
 
   x509.certificate_managed:

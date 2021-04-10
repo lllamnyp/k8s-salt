@@ -3,6 +3,7 @@ base:
   '*':
     - invert_roles
     - mine
-    - versions
-    - k8s_certs
-    - cluster_properties
+    - testsalt
+    #     - versions
+    #     - k8s_certs
+    #     - cluster_properties
