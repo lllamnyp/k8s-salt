@@ -1,22 +1,4 @@
 {% if 'controlplane' in salt['pillar.get']('roles') %}
-{% set k8sV = salt['pillar.get']('controlplane:version') %}
-get_controller_binaries:
-  file.managed:
-    - name: /data/k8s-controlplane/{{ k8sV }}/kube-controller-manager
-    - source: https://storage.googleapis.com/kubernetes-release/release/v{{ k8sV }}/bin/linux/amd64/kube-controller-manager
-    - skip_verify: true
-    - user: root
-    - mode: 644
-    - makedirs: True
-
-place_controller_binaries:
-  file.managed:
-    - mode: '0755'
-    - names:
-      - /usr/local/bin/kube-controller-manager:
-        - source: /data/k8s-controlplane/{{ k8sV }}/kube-controller-manager
-    - require:
-      - get_controller_binaries
 
 place_controller_files:
   file.managed:

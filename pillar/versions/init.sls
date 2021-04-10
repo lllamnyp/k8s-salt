@@ -1,15 +1,16 @@
 {% import_yaml "roles.yaml" as r %}
 
 {% if 'worker' in r[grains['id']]['roles'] %}
+# 
 containerd:
   version: {{ {
-    "mycluster": "1.3.3-0ubuntu1~18.04.4"
-    }[r[grains['id']]['cluster']] | default("1.3.3-0ubuntu1~18.04.4") }}
+    "mycluster": "1.3*"
+    }[r[grains['id']]['cluster']] | default("1.3*") }}
 
 kubelet:
   version: {{ {
-    "mycluster": "1.17.4-00"
-    }[r[grains['id']]['cluster']] | default("1.17.4-00") }}
+    "mycluster": "1.17.4"
+    }[r[grains['id']]['cluster']] | default("1.17.4") }}
 
 proxy:
   version: {{ {

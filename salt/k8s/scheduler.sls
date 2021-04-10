@@ -1,23 +1,4 @@
 {% if 'controlplane' in salt['pillar.get']('roles') %}
-{% set k8sV = salt['pillar.get']('controlplane:version') %}
-get_scheduler_binaries:
-  file.managed:
-    - name: /data/k8s-controlplane/{{ k8sV }}/kube-scheduler
-    - source: https://storage.googleapis.com/kubernetes-release/release/v{{ k8sV }}/bin/linux/amd64/kube-scheduler
-    - skip_verify: true
-    - user: root
-    - mode: 644
-    - makedirs: True
-
-place_scheduler_binaries:
-  file.managed:
-    - mode: '0755'
-    - names:
-      - /usr/local/bin/kube-scheduler:
-        - source: /data/k8s-controlplane/{{ k8sV }}/kube-scheduler
-    - require:
-      - get_scheduler_binaries
-
 place_scheduler_files:
   file.managed:
     - makedirs: True

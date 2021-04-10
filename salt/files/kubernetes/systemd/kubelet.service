@@ -3,7 +3,7 @@ Description=kubelet v{{ salt['pillar.get']('kubelet:version', '1.16.2-00') }}: T
 Documentation=https://kubernetes.io/docs/home/
 
 [Service]
-ExecStart=/usr/bin/kubelet \
+ExecStart=/usr/local/bin/kubelet \
   --config=/etc/kubernetes/config/kubelet-config.yaml \
   --image-pull-progress-deadline=2m \
   --kubeconfig=/etc/kubernetes/config/kubelet.kubeconfig \

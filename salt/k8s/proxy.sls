@@ -1,25 +1,4 @@
 {% if 'worker' in salt['pillar.get']('roles') %}
-{% set proxyV = salt['pillar.get']('proxy:version') %}
-
-get_proxy_bin:
-  file.managed:
-    - name: /data/kube-proxy/kube-proxy-{{ proxyV }}
-    - source: https://storage.googleapis.com/kubernetes-release/release/v{{ proxyV }}/bin/linux/amd64/kube-proxy
-    - skip_verify: true
-    - user: root
-    - group: devops
-    - mode: '0755'
-    - makedirs: True
-
-place_proxy_bin:
-  file.managed:
-    - mode: '0755'
-    - names:
-      - /usr/local/bin/kube-proxy:
-        - source: /data/kube-proxy/kube-proxy-{{ proxyV }}
-#    - require:
-#      - get_proxy_bin
-
 place_kubeproxy_files:
   file.managed:
     - makedirs: True

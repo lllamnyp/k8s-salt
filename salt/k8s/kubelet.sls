@@ -1,21 +1,4 @@
 {% if 'worker' in salt['pillar.get']('roles') %}
-
-install_kubelet_package:
-  pkgrepo.managed:
-    - humanname: Kubernetes repo
-    - name: deb https://apt.kubernetes.io kubernetes-xenial main
-    - key_url:  https://apt.kubernetes.io/doc/apt-key.gpg
-    - require_in:
-      - pkg: kubelet
-  pkg.installed:
-    - name: kubelet
-    - pkgs:
-      - kubelet: {{ salt['pillar.get']('kubelet:version', '1.17.4-00') }}
-    - hold: True
-    - refresh: True
-    - cache_valid_time: 86400 # 1 day
-    - version: {{ salt['pillar.get']('kubelet:version', '1.17.4-00') }}
-
 place_kubelet_files:
   file.managed:
     - makedirs: True
