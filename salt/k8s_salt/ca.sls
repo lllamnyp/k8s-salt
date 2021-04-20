@@ -19,6 +19,7 @@ Send list of registered clusters to mine:
   {% if clusters %}
 Generate k8s CA private keys:
   x509.private_key_managed:
+  - replace: False
   - makedirs: True
   - names:
     {% for cluster in clusters %}
@@ -31,6 +32,7 @@ Generate k8s CA private keys:
 Generate k8s CA root certs:
   x509.certificate_managed:
   - makedirs: True
+  - replace: False
   - names:
     {% for cluster in clusters %}
       {% for ca in cas %}
@@ -50,7 +52,7 @@ Generate k8s CA root certs:
   {% endif %}
 
 Make k8s CAs available in salt mine:
-  # This is deprecated `module.run` syntax, to be changed in Salt Sodium.
+  # TODO: This is deprecated `module.run` syntax, to be changed in Salt Sodium.
   module.run:
   - name: mine.send
   - m_name: get_authorities
