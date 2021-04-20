@@ -1,4 +1,5 @@
 {% set cas = ['kube-ca','etcd-ca','requestheader-ca'] %}
+
 Send list of registered clusters to mine:
   grains.present:
   - name: k8s_salt:cluster
