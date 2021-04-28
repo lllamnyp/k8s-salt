@@ -14,7 +14,7 @@ Send list of registered clusters to mine:
 
 {% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
   {% set clusters = [] %}
-  {% for cluster in salt['mine.get']('*', 'get_clusters').values() %}
+  {% for cluster in salt['mine.get']('*', 'get_clusters').values() | unique %}
     {% do clusters.append(cluster) %}
   {% endfor %}
   {% if clusters %}
