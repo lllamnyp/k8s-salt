@@ -71,6 +71,7 @@ Make k8s CAs available in salt mine:
   {% set authorities = pem_dict.popitem()[1] %}
 Place k8s CAs on minions:
   file.managed:
+  - makedirs: True
   - names:
   {% for ca in cas %}
     {% if '/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem' in authorities %}
