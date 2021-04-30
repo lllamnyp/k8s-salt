@@ -11,7 +11,7 @@ Send list of registered clusters to mine:
   - kwargs:
       mine_function: grains.get
   - args:
-    - k8s_salt:cluster
+    - k8s_salt
 
 {% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
   {% set clusters = [] %}
