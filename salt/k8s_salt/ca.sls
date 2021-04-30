@@ -4,6 +4,7 @@ Send list of registered clusters to mine:
   grains.present:
   - name: k8s_salt
   - value: {{ salt['pillar.get']('k8s_salt') }}
+  - force: True
   module.run:
   - name: mine.send
   - m_name: get_k8s_data
