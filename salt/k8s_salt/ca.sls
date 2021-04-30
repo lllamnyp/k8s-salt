@@ -2,11 +2,11 @@
 
 Send list of registered clusters to mine:
   grains.present:
-  - name: k8s_salt:cluster
-  - value: {{ salt['pillar.get']('k8s_salt:cluster') }}
+  - name: k8s_salt
+  - value: {{ salt['pillar.get']('k8s_salt') }}
   module.run:
   - name: mine.send
-  - m_name: get_clusters
+  - m_name: get_k8s_data
   - kwargs:
       mine_function: grains.get
   - args:
@@ -14,7 +14,7 @@ Send list of registered clusters to mine:
 
 {% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
   {% set clusters = [] %}
-  {% for cluster in salt['mine.get']('*', 'get_clusters').values() | unique %}
+  {% for cluster in salt['mine.get']('*', 'get_k8s_data').values() | map(attribute='cluster') | unique %}
     {% do clusters.append(cluster) %}
   {% endfor %}
   {% if clusters %}

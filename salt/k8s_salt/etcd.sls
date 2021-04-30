@@ -1,11 +1,11 @@
-{% if 'etcd' in salt['pillar.get']('roles') %}
-{% set etcdV = salt['pillar.get']('k8s_salt:version:etcd') or 'v3.4.15' %}
-{% set repo = salt['pillar.get']('k8s_salt:etcd_repo_proxy') or 'https://github.com/etcd-io/etcd/releases/download' %}
-{% set arch = salt['pillar.get']('k8s_salt:arch') or salt['grains.get']('osarch') or 'amd64' %}
+include:
+- .defaults
+
+{% if 'etcd' in salt['pillar.get']('k8s_salt:roles') %}
 get_etcd_archive:
   file.managed:
-  - name: /data/etcd/etcd-{{ etcdV }}.tar.gz
-  - source: {{ repo }}/{{ etcdV }}/etcd-{{ etcdV }}-linux-{{ arch }}.tar.gz
+  - name: /data/etcd/etcd-{{ etcd_version }}.tar.gz
+  - source: {{ etcd_repo }}/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-{{ arch }}.tar.gz
   - skip_verify: true
   - user: root
   - mode: 644
@@ -13,8 +13,8 @@ get_etcd_archive:
 
 unpack_etcd_archive:
   archive.extracted:
-  - name: /data/etcd/{{ etcdV }}
-  - source: /data/etcd/etcd-{{ etcdV }}.tar.gz
+  - name: /data/etcd/{{ etcd_version }}
+  - source: /data/etcd/etcd-{{ etcd_version }}.tar.gz
   - require:
     - get_etcd_archive
 place_etcd_binaries:
@@ -22,9 +22,9 @@ place_etcd_binaries:
   - mode: '0755'
   - names:
     - /usr/local/bin/etcd:
-      - source: /data/etcd/{{ etcdV }}/etcd-{{ etcdV }}-linux-{{ arch }}/etcd
+      - source: /data/etcd/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-{{ arch }}/etcd
     - /usr/local/bin/etcdctl:
-      - source: /data/etcd/{{ etcdV }}/etcd-{{ etcdV }}-linux-{{ arch }}/etcdctl
+      - source: /data/etcd/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-{{ arch }}/etcdctl
   - require:
     - unpack_etcd_archive
 
