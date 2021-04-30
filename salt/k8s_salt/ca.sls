@@ -1,10 +1,33 @@
 {% set cas = ['kube-ca','etcd-ca','requestheader-ca'] %}
 
-Send list of registered clusters to mine:
+{% if salt['pillar.get']('k8s_salt:enabled') and salt['pillar.get']('k8s_salt:cluster') %}
+Send k8s data to mine:
   grains.present:
-  - name: k8s_salt
-  - value: {{ salt['pillar.get']('k8s_salt') }}
-  - force: True
+  - names:
+    - k8s_salt:cluster:
+      - value: {{ salt['pillar.get']('k8s_salt:cluster') }}
+    - k8s_salt:roles:
+      - value: {{ salt['pillar.get']('k8s_salt:roles') }}
+      - force: True
+    - k8s_salt:hostname_fqdn:
+      - value: {{ salt['pillar.get']('k8s_salt:hostname_fqdn') or salt['grains.get']('fqdn') or salt['grains.get']('id') }}
+    - k8s_salt:ip:
+      # TODO: this ain't easy. There will be a bunch of edge cases to sort out.
+  {% if salt['pillar.get']('k8s_salt:ipv6') %}
+    {% if salt['pillar.get']('k8s_salt:network_interface') %}
+      {% set k8s_salt_network_interface = salt['pillar.get']('k8s_salt:network_interface') %}
+      - value: {{ salt['grains.get']('ip6_interfaces')[k8s_salt_network_interface] | first }}
+    {% else %} 
+      - value: {{ salt['grains.get']('fqdn_ip6') | first }}
+    {% endif %}
+  {% else %}
+    {% if salt['pillar.get']('k8s_salt:network_interface') %}
+      {% set k8s_salt_network_interface = salt['pillar.get']('k8s_salt:network_interface') %}
+      - value: {{ salt['grains.get']('ip4_interfaces')[k8s_salt_network_interface] | first }}
+    {% else %} 
+      - value: {{ salt['grains.get']('fqdn_ip4') | first }}
+    {% endif %}
+  {% endif %}
   module.run:
   - name: mine.send
   - m_name: get_k8s_data
@@ -12,10 +35,11 @@ Send list of registered clusters to mine:
       mine_function: grains.get
   - args:
     - k8s_salt
+{% endif %}
 
 {% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
   {% set clusters = [] %}
-  {% for cluster in salt['mine.get']('*', 'get_k8s_data').values() | map(attribute='cluster') | unique %}
+  {% for cluster in salt['mine.get']('I@k8s_salt:enabled and I@k8s_salt:cluster', 'get_k8s_data', 'compound').values() | map(attribute='cluster') | unique %}
     {% do clusters.append(cluster) %}
   {% endfor %}
   {% if clusters %}
