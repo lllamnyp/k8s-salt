@@ -30,6 +30,16 @@ Generate k8s CA private keys:
       {% endfor %}
     {% endfor %}
 
+Generate serviceaccount private key:
+  x509.private_key_managed:
+  - replace: False
+  - makedirs: True
+  - names:
+    {% for cluster in clusters %}
+    - /etc/kubernetes-authority/{{ cluster }}/sa-key.pem:
+      - bits: 4096
+    {% endfor %}
+
 Generate k8s CA root certs:
   x509.certificate_managed:
   - makedirs: True
@@ -63,6 +73,19 @@ Make k8s CAs available in salt mine:
     - /etc/kubernetes-authority/*/*-ca.pem
   #   - onchanges:
   #     - x509: ca_root_cert
+
+{% for cluster in clusters %}
+Serviceaccount keypair of {{ cluster }} to mine:
+  module.run:
+  - name: mine.send
+  - m_name: get_{{ cluster }}_sa_keypair
+  - kwargs:
+      mine_function: x509.get_pem_entries
+      allow_tgt: 'I@k8s_salt:roles:controlplane and I@k8s_salt:cluster:{{ cluster }}'
+      allow_tgt_type: compound
+  - args:
+    - /etc/kubernetes-authority/{{ cluster }}/sa-*.pem
+{% endfor %}
 {% endif %}
 
 {% set pem_dict = salt['mine.get']('*', 'get_authorities') %}
