@@ -1,4 +1,4 @@
-{% from './map.jinja' import k8s_data %}
+{% from './map.jinja' import k8s_salt %}
 {% if salt['pillar.get']('k8s_salt:enabled') and salt['pillar.get']('k8s_salt:cluster') %}
 Send k8s data to mine:
   grains.present:
