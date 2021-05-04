@@ -1,55 +1,16 @@
-{% set cas = ['kube-ca','etcd-ca','requestheader-ca'] %}
-
-{% if salt['pillar.get']('k8s_salt:enabled') and salt['pillar.get']('k8s_salt:cluster') %}
-Send k8s data to mine:
-  grains.present:
-  - names:
-    - k8s_salt:cluster:
-      - value: {{ salt['pillar.get']('k8s_salt:cluster') }}
-    - k8s_salt:roles:
-      - value: {{ salt['pillar.get']('k8s_salt:roles') }}
-      - force: True
-    - k8s_salt:hostname_fqdn:
-      - value: {{ salt['pillar.get']('k8s_salt:hostname_fqdn') or salt['grains.get']('fqdn') or salt['grains.get']('id') }}
-    - k8s_salt:ip:
-      # TODO: this ain't easy. There will be a bunch of edge cases to sort out.
-  {% if salt['pillar.get']('k8s_salt:ipv6') %}
-    {% if salt['pillar.get']('k8s_salt:network_interface') %}
-      {% set k8s_salt_network_interface = salt['pillar.get']('k8s_salt:network_interface') %}
-      - value: {{ salt['grains.get']('ip6_interfaces')[k8s_salt_network_interface] | first }}
-    {% else %} 
-      - value: {{ salt['grains.get']('fqdn_ip6') | first }}
-    {% endif %}
-  {% else %}
-    {% if salt['pillar.get']('k8s_salt:network_interface') %}
-      {% set k8s_salt_network_interface = salt['pillar.get']('k8s_salt:network_interface') %}
-      - value: {{ salt['grains.get']('ip4_interfaces')[k8s_salt_network_interface] | first }}
-    {% else %} 
-      - value: {{ salt['grains.get']('fqdn_ip4') | first }}
-    {% endif %}
-  {% endif %}
-  module.run:
-  - name: mine.send
-  - m_name: get_k8s_data
-  - kwargs:
-      mine_function: grains.get
-  - args:
-    - k8s_salt
-{% endif %}
-
 {% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
-  {% set clusters = [] %}
+  {% set k8s_salt_clusters = [] %}
   {% for cluster in salt['mine.get']('I@k8s_salt:enabled and I@k8s_salt:cluster', 'get_k8s_data', 'compound').values() | map(attribute='cluster') | unique %}
-    {% do clusters.append(cluster) %}
+    {% do k8s_salt_clusters.append(cluster) %}
   {% endfor %}
-  {% if clusters %}
+  {% if k8s_salt_clusters %}
 Generate k8s CA private keys:
   x509.private_key_managed:
   - replace: False
   - makedirs: True
   - names:
-    {% for cluster in clusters %}
-      {% for ca in cas %}
+    {% for cluster in k8s_salt_clusters %}
+      {% for ca in k8s_salt_cas %}
     - /etc/kubernetes-authority/{{ cluster }}/{{ ca }}-key.pem:
       - bits: 4096
       {% endfor %}
@@ -60,7 +21,7 @@ Generate serviceaccount private key:
   - replace: False
   - makedirs: True
   - names:
-    {% for cluster in clusters %}
+    {% for cluster in k8s_salt_clusters %}
     - /etc/kubernetes-authority/{{ cluster }}/sa-key.pem:
       - bits: 4096
     {% endfor %}
@@ -70,8 +31,8 @@ Generate k8s CA root certs:
   - makedirs: True
   - replace: False
   - names:
-    {% for cluster in clusters %}
-      {% for ca in cas %}
+    {% for cluster in k8s_salt_clusters %}
+      {% for ca in k8s_salt_cas %}
     - /etc/kubernetes-authority/{{ cluster }}/{{ ca }}.pem:
       - CN: kube-ca
       - signing_private_key: /etc/kubernetes-authority/{{ cluster }}/{{ ca }}-key.pem
@@ -99,7 +60,7 @@ Make k8s CAs available in salt mine:
   #   - onchanges:
   #     - x509: ca_root_cert
 
-{% for cluster in clusters %}
+{% for cluster in k8s_salt_clusters %}
 Serviceaccount keypair of {{ cluster }} to mine:
   module.run:
   - name: mine.send
@@ -113,21 +74,21 @@ Serviceaccount keypair of {{ cluster }} to mine:
 {% endfor %}
 {% endif %}
 
-{% set pem_dict = salt['mine.get']('*', 'get_authorities') %}
-{% if pem_dict %}
-  {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-  {% set authorities = pem_dict.popitem()[1] %}
-Place k8s CAs on minions:
-  file.managed:
-  - makedirs: True
-  - names:
-  {% for ca in cas %}
-    {% if '/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem' in authorities %}
-    - /etc/kubernetes/pki/{{ ca }}.pem:
-      - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem']|tojson }}
-    {% endif %}
-  {% endfor %}
-{% endif %}
+# {% set pem_dict = salt['mine.get']('I@k8s_salt:roles:ca', 'get_authorities', 'compound') %}
+# {% if pem_dict %}
+#   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
+#   {% set authorities = pem_dict.popitem()[1] %}
+# Place k8s CAs on minions:
+#   file.managed:
+#   - makedirs: True
+#   - names:
+#   {% for ca in k8s_salt_cas %}
+#     {% if '/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem' in authorities %}
+#     - /etc/kubernetes/pki/{{ ca }}.pem:
+#       - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem']|tojson }}
+#     {% endif %}
+#   {% endfor %}
+# {% endif %}
 
 {% if salt['service.status']('salt-master') %}
 Allow minions to request certs:
@@ -145,8 +106,8 @@ Place signing policy on CA server:
       - source: salt://k8s_salt/templates/signing_policies.conf
       - template: jinja
       - defaults:
-          cas: {{ cas }}
-          clusters: {{ clusters }}
+          k8s_salt_cas: {{ k8s_salt_cas }}
+          k8s_salt_clusters: {{ k8s_salt_clusters }}
   cmd.run:
   - name: 'salt-call service.restart salt-minion'
   - bg: True

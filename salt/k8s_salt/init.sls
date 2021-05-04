@@ -1,2 +1,3 @@
 include:
-- .ca
+- .defaults
+- .mine

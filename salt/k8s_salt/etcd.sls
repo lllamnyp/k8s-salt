@@ -1,11 +1,8 @@
-include:
-- .defaults
-
 {% if 'etcd' in salt['pillar.get']('k8s_salt:roles') %}
 get_etcd_archive:
   file.managed:
-  - name: /data/etcd/etcd-{{ etcd_version }}.tar.gz
-  - source: {{ etcd_repo }}/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-{{ arch }}.tar.gz
+  - name: /data/etcd/etcd-{{ k8s_salt_version_etcd }}.tar.gz
+  - source: {{ k8s_salt_etcd_proxy_repo }}/{{ k8s_salt_version_etcd }}/etcd-{{ k8s_salt_version_etcd }}-linux-{{ k8s_salt_arch }}.tar.gz
   - skip_verify: true
   - user: root
   - mode: 644
@@ -13,61 +10,64 @@ get_etcd_archive:
 
 unpack_etcd_archive:
   archive.extracted:
-  - name: /data/etcd/{{ etcd_version }}
-  - source: /data/etcd/etcd-{{ etcd_version }}.tar.gz
+  - name: /data/etcd/{{ k8s_salt_version_etcd }}
+  - source: /data/etcd/etcd-{{ k8s_salt_version_etcd }}.tar.gz
   - require:
     - get_etcd_archive
+
 place_etcd_binaries:
   file.managed:
   - mode: '0755'
   - names:
     - /usr/local/bin/etcd:
-      - source: /data/etcd/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-{{ arch }}/etcd
+      - source: /data/etcd/{{ k8s_salt_version_etcd }}/etcd-{{ k8s_salt_version_etcd }}-linux-{{ k8s_salt_arch }}/etcd
     - /usr/local/bin/etcdctl:
-      - source: /data/etcd/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-{{ arch }}/etcdctl
+      - source: /data/etcd/{{ k8s_salt_version_etcd }}/etcd-{{ k8s_salt_version_etcd }}-linux-{{ k8s_salt_arch }}/etcdctl
   - require:
     - unpack_etcd_archive
 
-place_etcd_certs:
+  {% set authorities = salt['mine.get']('I@k8s_salt:roles:ca', 'get_authorities', 'compound').popitem()[1] %}
+  {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
+Etcd X509 management:
+  x509.private_key_managed:
+  - replace: False
+  - makedirs: True
+  - names:
+  {% for key in ['etcd-peer','etcd-server'] %}
+    - /etc/kubernetes/pki/{{ key }}-key.pem:
+      - bits: 4096
+  {% endfor %}
   file.managed:
   - makedirs: True
   - names:
-    - /etc/kubernetes/pki/kube-ca.pem:
-      - contents_pillar: k8s_certs:kube-ca
-        mode: '0644'
-#     - /etc/kubernetes/pki/apiserver.pem:
-#       - contents_pillar: k8s_certs:apiserver
-#         mode: '0644'
-#     - /etc/kubernetes/pki/apiserver-key.pem:
-#       - contents_pillar: k8s_certs:apiserver-key
-#         mode: '0600'
+  {% for ca in ['etcd-peer-ca','etcd-trusted-ca'] %}
+    - /etc/kubernetes/pki/{{ ca }}.pem:
+      - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem'] | tojson }}
+      - mode: '0644'
+  {% endfor %}
   x509.certificate_managed:
   - makedirs: True
   - names:
-    - /etc/kubernetes/pki/apiserver.pem:
-      - CN: kube-apiserver
-      - signing_private_key: {{ salt['pillar.get']('k8s_certs:kube-ca-key', '') | tojson }}
-      - signing_cert: {{ salt['pillar.get']('k8s_certs:kube-ca', '') | tojson }}
-      - managed_private_key:
-          name: /etc/kubernetes/pki/apiserver-key.pem
-          bits: 2048
+  {% for key in ['etcd-peer','etcd-server'] %}
+    - /etc/kubernetes/pki/{{ key }}.pem:
+      - CN: {{ salt['grains.get']('k8s_salt:hostname_fqdn') }}
+      - ca_server: {{ salt['mine.get']('I@k8s_salt:roles:ca', 'get_k8s_data', 'compound').popitem()[1]['id'] }}
+      - public_key: /etc/kubernetes/pki/{{ key }}-key.pem
+      - signing_policy: {{ cluster }}_{{ key }}-ca
       - keyUsage: "critical Digital Signature, Key Encipherment"
       - extendedKeyUsage: "TLS Web Server Authentication, TLS Web Client Authentication"
       - basicConstraints: "critical CA:FALSE"
       - subjectAltName: >-
           DNS:localhost,
-          DNS:kubernetes,
-          DNS:kubernetes.default,
-          DNS:kubernetes.default.svc,
-          DNS:kubernetes.default.svc.cluster.local,
-          IP Address:{{salt['grains.get']('fqdn_ip4')[0]}},
-          IP Address:10.43.0.1,
-          IP Address:127.0.0.1
+          DNS:{{ salt['grains.get']('k8s_salt:hostname_fqdn' }},
+          IP Address:127.0.0.1,
+          IP Address:{{ salt['grains.get']('k8s_salt:ip') }}
+  {% endfor %}
 
 place_etcd_service:
   file.managed:
   - name: /etc/systemd/system/etcd.service
-  - source: salt://files/kubernetes/systemd/etcd.service
+  - source: salt://{{ slspath }}/templates/etcd.service
   - mode: 644
   - template: jinja
   module.run:
