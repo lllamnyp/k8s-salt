@@ -1,3 +1,4 @@
+{% from './map.jinja' import k8s_data %}
 {% if salt['pillar.get']('k8s_salt:enabled') and salt['pillar.get']('k8s_salt:cluster') %}
 Send k8s data to mine:
   grains.present:
@@ -10,7 +11,7 @@ Send k8s data to mine:
     - k8s_salt:hostname_fqdn:
       - value: {{ salt['pillar.get']('k8s_salt:hostname_fqdn') or salt['grains.get']('fqdn') or salt['grains.get']('id') }}
     - k8s_salt:ip:
-      - value: {{ k8s_salt_ip }}
+      - value: {{ k8s_salt['ip'] }}
     - k8s_salt:id:
       - value: {{ salt['grains.get']('id') }}
   module.run:
