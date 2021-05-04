@@ -1,8 +1,9 @@
+{% from './map.jinja' import k8s_salt %}
 {% if 'etcd' in salt['pillar.get']('k8s_salt:roles') %}
 get_etcd_archive:
   file.managed:
-  - name: /data/etcd/etcd-{{ k8s_salt_version_etcd }}.tar.gz
-  - source: {{ k8s_salt_etcd_proxy_repo }}/{{ k8s_salt_version_etcd }}/etcd-{{ k8s_salt_version_etcd }}-linux-{{ k8s_salt_arch }}.tar.gz
+  - name: /data/etcd/etcd-{{ k8s_salt['version_etcd'] }}.tar.gz
+  - source: {{ k8s_salt['etcd_proxy_repo'] }}/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}.tar.gz
   - skip_verify: true
   - user: root
   - mode: 644
@@ -10,8 +11,8 @@ get_etcd_archive:
 
 unpack_etcd_archive:
   archive.extracted:
-  - name: /data/etcd/{{ k8s_salt_version_etcd }}
-  - source: /data/etcd/etcd-{{ k8s_salt_version_etcd }}.tar.gz
+  - name: /data/etcd/{{ k8s_salt['version_etcd'] }}
+  - source: /data/etcd/etcd-{{ k8s_salt['version_etcd'] }}.tar.gz
   - require:
     - get_etcd_archive
 
@@ -20,9 +21,9 @@ place_etcd_binaries:
   - mode: '0755'
   - names:
     - /usr/local/bin/etcd:
-      - source: /data/etcd/{{ k8s_salt_version_etcd }}/etcd-{{ k8s_salt_version_etcd }}-linux-{{ k8s_salt_arch }}/etcd
+      - source: /data/etcd/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}/etcd
     - /usr/local/bin/etcdctl:
-      - source: /data/etcd/{{ k8s_salt_version_etcd }}/etcd-{{ k8s_salt_version_etcd }}-linux-{{ k8s_salt_arch }}/etcdctl
+      - source: /data/etcd/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}/etcdctl
   - require:
     - unpack_etcd_archive
 

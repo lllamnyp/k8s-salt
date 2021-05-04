@@ -1,16 +1,13 @@
+{% from './map.jinja' import k8s_salt %}
 {% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
-  {% set k8s_salt_clusters = [] %}
-  {% for cluster in salt['mine.get']('I@k8s_salt:enabled and I@k8s_salt:cluster', 'get_k8s_data', 'compound').values() | map(attribute='cluster') | unique %}
-    {% do k8s_salt_clusters.append(cluster) %}
-  {% endfor %}
-  {% if k8s_salt_clusters %}
+  {% if k8s_salt['clusters'] %}
 Generate k8s CA private keys:
   x509.private_key_managed:
   - replace: False
   - makedirs: True
   - names:
-    {% for cluster in k8s_salt_clusters %}
-      {% for ca in k8s_salt_cas %}
+    {% for cluster in k8s_salt['clusters'] %}
+      {% for ca in k8s_salt['cas'] %}
     - /etc/kubernetes-authority/{{ cluster }}/{{ ca }}-key.pem:
       - bits: 4096
       {% endfor %}
@@ -21,7 +18,7 @@ Generate serviceaccount private key:
   - replace: False
   - makedirs: True
   - names:
-    {% for cluster in k8s_salt_clusters %}
+    {% for cluster in k8s_salt['clusters'] %}
     - /etc/kubernetes-authority/{{ cluster }}/sa-key.pem:
       - bits: 4096
     {% endfor %}
@@ -31,8 +28,8 @@ Generate k8s CA root certs:
   - makedirs: True
   - replace: False
   - names:
-    {% for cluster in k8s_salt_clusters %}
-      {% for ca in k8s_salt_cas %}
+    {% for cluster in k8s_salt['clusters'] %}
+      {% for ca in k8s_salt['cas'] %}
     - /etc/kubernetes-authority/{{ cluster }}/{{ ca }}.pem:
       - CN: kube-ca
       - signing_private_key: /etc/kubernetes-authority/{{ cluster }}/{{ ca }}-key.pem
@@ -60,7 +57,7 @@ Make k8s CAs available in salt mine:
   #   - onchanges:
   #     - x509: ca_root_cert
 
-{% for cluster in k8s_salt_clusters %}
+{% for cluster in k8s_salt['clusters'] %}
 Serviceaccount keypair of {{ cluster }} to mine:
   module.run:
   - name: mine.send
@@ -82,7 +79,7 @@ Serviceaccount keypair of {{ cluster }} to mine:
 #   file.managed:
 #   - makedirs: True
 #   - names:
-#   {% for ca in k8s_salt_cas %}
+#   {% for ca in k8s_salt['cas'] %}
 #     {% if '/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem' in authorities %}
 #     - /etc/kubernetes/pki/{{ ca }}.pem:
 #       - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem']|tojson }}
@@ -106,8 +103,7 @@ Place signing policy on CA server:
       - source: salt://k8s_salt/templates/signing_policies.conf
       - template: jinja
       - defaults:
-          k8s_salt_cas: {{ k8s_salt_cas }}
-          k8s_salt_clusters: {{ k8s_salt_clusters }}
+          k8s_salt: {{ k8s_salt }}
   cmd.run:
   - name: 'salt-call service.restart salt-minion'
   - bg: True

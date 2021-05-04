@@ -1,3 +1,4 @@
+{# vi: set ft=sls : #}
 {% set k8s_salt = {} %}
 {% do k8s_salt.update({'version_etcd':salt['pillar.get']('k8s_salt:version:etcd') or 'v3.4.15'}) %}
 {% do k8s_salt.update({'etcd_proxy_repo':salt['pillar.get']('k8s_salt:etcd_proxy_repo') or 'https://github.com/etcd-io/etcd/releases/download'}) %}
@@ -21,3 +22,20 @@
     {% do k8s_salt.update({'ip':salt['grains.get']('fqdn_ip4') | first}) %}
   {% endif %}
 {% endif %}
+
+# Get list of clusters
+{% set clusters = [] %}
+{% for cluster in salt['mine.get']('I@k8s_salt:enabled and I@k8s_salt:cluster', 'get_k8s_data', 'compound').values() | map(attribute='cluster') | unique %}
+  {% do clusters.append(cluster) %}
+{% endfor %}
+{% do k8s_salt.update({'clusters':clusters}) %}
+
+# Signing policy constraints
+{% set allowed_minions = {
+                           'etcd-peer-ca':'I@k8s_salt:roles:etcd',
+                           'etcd-server-ca':'I@k8s_salt:roles:etcd',
+                           'etcd-trusted-ca':'I@k8s_salt:roles:controlplane',
+                           'requestheader-ca':'I@k8s_salt:roles:controlplane',
+                           'kube-ca':'I@k8s_salt:roles:controlplane or I@k8s_salt:roles:worker'
+                         } %}
+{% do k8s_salt.update({'allowed_minions':allowed_minions}) %}
