@@ -1,6 +1,6 @@
 {# vi: set ft=sls : #}
 {%- set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-{%- set etcd_selector = 'I@k8s_salt:cluster:' + cluster + ' and I@k8s_salt:roles:etcd' %}
+{%- set etcd_selector = 'I@k8s_salt:cluster:' + cluster + ' and I@k8s_salt:roles:etcd:True' %}
 {%- set etcd_servers = salt['mine.get'](etcd_selector, 'get_k8s_data', 'compound') %}
 [Unit]
 Description=etcd

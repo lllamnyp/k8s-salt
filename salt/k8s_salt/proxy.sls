@@ -1,4 +1,4 @@
-{% if 'worker' in salt['pillar.get']('k8s_salt:roles') %}
+{% if salt['pillar.get']('k8s_salt:roles:worker') %}
 place_kubeproxy_files:
   file.managed:
   - makedirs: True

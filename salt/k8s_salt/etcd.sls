@@ -1,5 +1,5 @@
 {% from './map.jinja' import k8s_salt %}
-{% if 'etcd' in salt['pillar.get']('k8s_salt:roles') %}
+{% if salt['pillar.get']('k8s_salt:roles:etcd') %}
 get_etcd_archive:
   file.managed:
   - name: /data/etcd/etcd-{{ k8s_salt['version_etcd'] }}.tar.gz
@@ -27,7 +27,7 @@ place_etcd_binaries:
   - require:
     - unpack_etcd_archive
 
-  {% set authorities = salt['mine.get']('I@k8s_salt:roles:ca', 'get_authorities', 'compound').popitem()[1] %}
+  {% set authorities = salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_authorities', 'compound').popitem()[1] %}
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 Etcd private keys:
   x509.private_key_managed:
@@ -54,7 +54,7 @@ Etcd X509 management:
   {% for key in ['etcd-peer','etcd-trusted'] %}
     - /etc/kubernetes/pki/{{ key }}.pem:
       - CN: {{ salt['grains.get']('k8s_salt:hostname_fqdn') }}
-      - ca_server: {{ salt['mine.get']('I@k8s_salt:roles:ca', 'get_k8s_data', 'compound').popitem()[1]['id'] }}
+      - ca_server: {{ salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_k8s_data', 'compound').popitem()[1]['id'] }}
       - public_key: /etc/kubernetes/pki/{{ key }}-key.pem
       - signing_policy: {{ cluster }}_{{ key }}-ca
       - keyUsage: "critical Digital Signature, Key Encipherment"

@@ -1,7 +1,5 @@
 {# vi: set ft=sls : #}
 {% set k8s_salt = {} %}
-{% do k8s_salt.update({'version_etcd':salt['pillar.get']('k8s_salt:version:etcd') or 'v3.4.15'}) %}
-{% do k8s_salt.update({'etcd_proxy_repo':salt['pillar.get']('k8s_salt:etcd_proxy_repo') or 'https://github.com/etcd-io/etcd/releases/download'}) %}
 {% do k8s_salt.update({'arch':salt['pillar.get']('k8s_salt:arch') or salt['grains.get']('osarch') or 'amd64'}) %}
 {% do k8s_salt.update({'cas':['kube-ca','etcd-peer-ca','etcd-trusted-ca','requestheader-ca']}) %}
 
@@ -35,9 +33,30 @@
 
 # Signing policy constraints
 {% set allowed_minions = {
-                           'etcd-peer-ca':'I@k8s_salt:roles:etcd',
-                           'etcd-trusted-ca':'I@k8s_salt:roles:etcd or I@k8s_salt:roles:controlplane',
-                           'requestheader-ca':'I@k8s_salt:roles:controlplane',
-                           'kube-ca':'I@k8s_salt:roles:controlplane or I@k8s_salt:roles:worker'
+                           'etcd-peer-ca':'I@k8s_salt:roles:etcd:True',
+                           'etcd-trusted-ca':'I@k8s_salt:roles:etcd:True or I@k8s_salt:roles:controlplane:True',
+                           'requestheader-ca':'I@k8s_salt:roles:controlplane:True',
+                           'kube-ca':'I@k8s_salt:roles:controlplane:True or I@k8s_salt:roles:worker:True'
                          } %}
 {% do k8s_salt.update({'allowed_minions':allowed_minions}) %}
+
+# Version info
+{% do k8s_salt.update({'version_kubernetes':salt['pillar.get']('k8s_salt:version:kubernetes') or '1.21.0'}) %}
+{% do k8s_salt.update({'version_etcd':salt['pillar.get']('k8s_salt:version:etcd') or 'v3.4.15'}) %}
+
+# Proxy repos (if necessary)
+{% do k8s_salt.update({'k8s_proxy_repo':salt['pillar.get']('k8s_salt:k8s_proxy_repo') or 'https://storage.googleapis.com/kubernetes-release/release'}) %}
+{% do k8s_salt.update({'etcd_proxy_repo':salt['pillar.get']('k8s_salt:etcd_proxy_repo') or 'https://github.com/etcd-io/etcd/releases/download'}) %}
+
+# K8s binaries
+{% set binaries = [] %}
+{% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
+{% do binaries.append('kube-apiserer') %}
+{% do binaries.append('kube-scheduler') %}
+{% do binaries.append('kube-controller-manager') %}
+{% endif %}
+{% if salt['pillar.get']('k8s_salt:roles:worker') %}
+{% do binaries.append('kube-proxy') %}
+{% do binaries.append('kubelet') %}
+{% endif %}
+{% do k8s_salt.update({'k8s_binaries':binaries}) %}

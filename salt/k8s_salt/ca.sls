@@ -1,5 +1,5 @@
 {% from './map.jinja' import k8s_salt %}
-{% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
+{% if salt['pillar.get']('k8s_salt:roles:ca') %}
   {% if k8s_salt['clusters'] %}
 Generate k8s CA private keys:
   x509.private_key_managed:
@@ -64,7 +64,7 @@ Serviceaccount keypair of {{ cluster }} to mine:
   - m_name: get_{{ cluster }}_sa_keypair
   - kwargs:
       mine_function: x509.get_pem_entries
-      allow_tgt: 'I@k8s_salt:roles:controlplane and I@k8s_salt:cluster:{{ cluster }}'
+      allow_tgt: 'I@k8s_salt:roles:controlplane:True and I@k8s_salt:cluster:{{ cluster }}'
       allow_tgt_type: compound
   - args:
     - /etc/kubernetes-authority/{{ cluster }}/sa-*.pem
@@ -79,7 +79,7 @@ Allow minions to request certs:
       - source: salt://k8s_salt/templates/peer.conf
 {% endif %}
 
-{% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
+{% if salt['pillar.get']('k8s_salt:roles:ca') %}
 Create directory for copypath:
   file.directory:
   - name: /etc/pki/issued_certs

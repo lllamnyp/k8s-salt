@@ -1,4 +1,4 @@
-{% if 'controlplane' in salt['pillar.get']('k8s_salt:roles') %}
+{% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
 place_apiserver_files:
   file.managed:
   - makedirs: True
