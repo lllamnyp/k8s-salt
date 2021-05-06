@@ -29,15 +29,17 @@ place_etcd_binaries:
 
   {% set authorities = salt['mine.get']('I@k8s_salt:roles:ca', 'get_authorities', 'compound').popitem()[1] %}
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-Etcd X509 management:
+Etcd private keys:
   x509.private_key_managed:
   - replace: False
   - makedirs: True
   - names:
-  {% for key in ['etcd-peer','etcd-server'] %}
+  {% for key in ['etcd-peer','etcd-trusted'] %}
     - /etc/kubernetes/pki/{{ key }}-key.pem:
       - bits: 4096
   {% endfor %}
+
+Etcd X509 management:
   file.managed:
   - makedirs: True
   - names:
@@ -49,7 +51,7 @@ Etcd X509 management:
   x509.certificate_managed:
   - makedirs: True
   - names:
-  {% for key in ['etcd-peer','etcd-server'] %}
+  {% for key in ['etcd-peer','etcd-trusted'] %}
     - /etc/kubernetes/pki/{{ key }}.pem:
       - CN: {{ salt['grains.get']('k8s_salt:hostname_fqdn') }}
       - ca_server: {{ salt['mine.get']('I@k8s_salt:roles:ca', 'get_k8s_data', 'compound').popitem()[1]['id'] }}
@@ -60,7 +62,7 @@ Etcd X509 management:
       - basicConstraints: "critical CA:FALSE"
       - subjectAltName: >-
           DNS:localhost,
-          DNS:{{ salt['grains.get']('k8s_salt:hostname_fqdn' }},
+          DNS:{{ salt['grains.get']('k8s_salt:hostname_fqdn') }},
           IP Address:127.0.0.1,
           IP Address:{{ salt['grains.get']('k8s_salt:ip') }}
   {% endfor %}
@@ -71,6 +73,8 @@ place_etcd_service:
   - source: salt://{{ slspath }}/templates/etcd.service
   - mode: 644
   - template: jinja
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
   module.run:
   - name: service.systemctl_reload
   - onchanges:

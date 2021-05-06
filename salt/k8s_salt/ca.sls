@@ -31,7 +31,7 @@ Generate k8s CA root certs:
     {% for cluster in k8s_salt['clusters'] %}
       {% for ca in k8s_salt['cas'] %}
     - /etc/kubernetes-authority/{{ cluster }}/{{ ca }}.pem:
-      - CN: kube-ca
+      - CN: {{ ca }}
       - signing_private_key: /etc/kubernetes-authority/{{ cluster }}/{{ ca }}-key.pem
       - basicConstraints: "critical CA:true"
       - keyUsage: "critical cRLSign, keyCertSign"
@@ -71,22 +71,6 @@ Serviceaccount keypair of {{ cluster }} to mine:
 {% endfor %}
 {% endif %}
 
-# {% set pem_dict = salt['mine.get']('I@k8s_salt:roles:ca', 'get_authorities', 'compound') %}
-# {% if pem_dict %}
-#   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-#   {% set authorities = pem_dict.popitem()[1] %}
-# Place k8s CAs on minions:
-#   file.managed:
-#   - makedirs: True
-#   - names:
-#   {% for ca in k8s_salt['cas'] %}
-#     {% if '/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem' in authorities %}
-#     - /etc/kubernetes/pki/{{ ca }}.pem:
-#       - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem']|tojson }}
-#     {% endif %}
-#   {% endfor %}
-# {% endif %}
-
 {% if salt['service.status']('salt-master') %}
 Allow minions to request certs:
   file.managed:
@@ -96,6 +80,10 @@ Allow minions to request certs:
 {% endif %}
 
 {% if 'ca' in salt['pillar.get']('k8s_salt:roles') %}
+Create directory for copypath:
+  file.directory:
+  - name: /etc/pki/issued_certs
+
 Place signing policy on CA server:
   file.managed:
   - names:

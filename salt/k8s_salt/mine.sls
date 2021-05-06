@@ -9,7 +9,7 @@ Send k8s data to mine:
       - value: {{ salt['pillar.get']('k8s_salt:roles') }}
       - force: True
     - k8s_salt:hostname_fqdn:
-      - value: {{ salt['pillar.get']('k8s_salt:hostname_fqdn') or salt['grains.get']('fqdn') or salt['grains.get']('id') }}
+      - value: {{ k8s_salt['hostname_fqdn'] }}
     - k8s_salt:ip:
       - value: {{ k8s_salt['ip'] }}
     - k8s_salt:id:

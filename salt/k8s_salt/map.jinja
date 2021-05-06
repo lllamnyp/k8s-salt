@@ -3,7 +3,10 @@
 {% do k8s_salt.update({'version_etcd':salt['pillar.get']('k8s_salt:version:etcd') or 'v3.4.15'}) %}
 {% do k8s_salt.update({'etcd_proxy_repo':salt['pillar.get']('k8s_salt:etcd_proxy_repo') or 'https://github.com/etcd-io/etcd/releases/download'}) %}
 {% do k8s_salt.update({'arch':salt['pillar.get']('k8s_salt:arch') or salt['grains.get']('osarch') or 'amd64'}) %}
-{% do k8s_salt.update({'cas':['kube-ca','etcd-peer-ca','etcd-trusted-ca','etcd-server-ca','requestheader-ca']}) %}
+{% do k8s_salt.update({'cas':['kube-ca','etcd-peer-ca','etcd-trusted-ca','requestheader-ca']}) %}
+
+# Hostname is also a problem
+{% do k8s_salt.update({'hostname_fqdn':salt['pillar.get']('k8s_salt:hostname_fqdn') or salt['grains.get']('fqdn') or salt['grains.get']('id')}) %}
 
 # Try to infer the node's IP 
 # TODO: this ain't easy. There will be a bunch of edge cases to sort out.
@@ -33,8 +36,7 @@
 # Signing policy constraints
 {% set allowed_minions = {
                            'etcd-peer-ca':'I@k8s_salt:roles:etcd',
-                           'etcd-server-ca':'I@k8s_salt:roles:etcd',
-                           'etcd-trusted-ca':'I@k8s_salt:roles:controlplane',
+                           'etcd-trusted-ca':'I@k8s_salt:roles:etcd or I@k8s_salt:roles:controlplane',
                            'requestheader-ca':'I@k8s_salt:roles:controlplane',
                            'kube-ca':'I@k8s_salt:roles:controlplane or I@k8s_salt:roles:worker'
                          } %}
