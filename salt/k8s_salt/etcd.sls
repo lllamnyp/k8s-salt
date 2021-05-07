@@ -54,7 +54,7 @@ Etcd X509 management:
   {% for key in ['etcd-peer','etcd-trusted'] %}
     - /etc/kubernetes/pki/{{ key }}.pem:
       - CN: {{ salt['grains.get']('k8s_salt:hostname_fqdn') }}
-      - ca_server: {{ salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_k8s_data', 'compound').popitem()[1]['id'] }}
+      - ca_server: {{ k8s_salt['ca_server'] }}
       - public_key: /etc/kubernetes/pki/{{ key }}-key.pem
       - signing_policy: {{ cluster }}_{{ key }}-ca
       - keyUsage: "critical Digital Signature, Key Encipherment"

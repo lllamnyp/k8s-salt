@@ -17,10 +17,19 @@ Generate serviceaccount private key:
   x509.private_key_managed:
   - replace: False
   - makedirs: True
+  - bits: 4096
   - names:
     {% for cluster in k8s_salt['clusters'] %}
     - /etc/kubernetes-authority/{{ cluster }}/sa-key.pem:
-      - bits: 4096
+    {% endfor %}
+
+Generate corresponding sa public key:
+  x509.pem_managed:
+  - makedirs: True
+  - names:
+    {% for cluster in k8s_salt['clusters'] %}
+    - /etc/kubernetes-authority/{{ cluster }}/sa.pem:
+      - text: {{ salt['x509.get_public_key']('/etc/kubernetes-authority/' + cluster + '/sa-key.pem') }}
     {% endfor %}
 
 Generate k8s CA root certs:

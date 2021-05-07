@@ -1,60 +1,68 @@
 {% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
-place_apiserver_files:
+  {% set authorities = salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_authorities', 'compound').popitem()[1] %}
+  {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
+  {% set sa_pubkey = salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_' + cluster + '_sa_keypair', 'compound')popitem()[1]['/etc/kubernetes-authority/' + cluster + '/sa.pem'] %}
+Apiserver private keys:
+  x509.private_key_managed:
+  - replace: False
+  - makedirs: True
+  - names:
+  {% for key in ['etcdclient','apiserver','proxy-client'] %}
+    - /etc/kubernetes/pki/{{ key }}-key.pem:
+      - bits: 4096
+  {% endfor %}
+
+Apiserver X509 management:
   file.managed:
   - makedirs: True
   - names:
-    - /etc/kubernetes/pki/kube-ca.pem:
-      - contents_pillar: k8s_salt:certs:kube-ca
-        mode: '0644'
-    - /etc/kubernetes/pki/requestheader-ca.pem:
-      - contents_pillar: k8s_salt:certs:requestheader-ca
-        mode: '0644'
+  {% for ca in ['kube-ca','etcd-trusted-ca','requestheader-ca'] %}
+    - /etc/kubernetes/pki/{{ ca }}.pem:
+      - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem'] | tojson }}
+      - mode: '0644'
+  {% endfor %}
 
   x509.certificate_managed:
   - makedirs: True
   - names:
-    - /etc/kubernetes/pki/apiserver.pem:
-      - CN: kube-apiserver
-      - signing_private_key: {{ salt['pillar.get']('k8s_salt:certs:kube-ca-key', '') | tojson }}
-      - signing_cert: {{ salt['pillar.get']('k8s_salt:certs:kube-ca', '') | tojson }}
-      - managed_private_key:
-          name: /etc/kubernetes/pki/apiserver-key.pem
-          bits: 2048
+  {% set policy = {'etcdclient':'etcd-trusted-ca','apiserver':'kube-ca','proxy-client':'requestheader-ca'} %}
+  {% for key in ['etcdclient','apiserver','proxy-client'] %}
+    - /etc/kubernetes/pki/{{ key }}.pem:
+      - CN: {{ salt['grains.get']('k8s_salt:hostname_fqdn') }}
+      - ca_server: {{ k8s_salt['ca_server'] }}
+      - public_key: /etc/kubernetes/pki/{{ key }}-key.pem
+      - signing_policy: {{ cluster }}_{{ policy[key] }}
       - keyUsage: "critical Digital Signature, Key Encipherment"
       - extendedKeyUsage: "TLS Web Server Authentication, TLS Web Client Authentication"
-      - basicConstraints: "critical CA:FALSE"
+      - basicConstraints: "critical CA:FALSE"{% if key != 'proxy-client' %}
       - subjectAltName: >-
           DNS:localhost,
+          DNS:{{ salt['grains.get']('k8s_salt:hostname_fqdn') }},
+          IP Address:127.0.0.1,
+          IP Address:{{ salt['grains.get']('k8s_salt:ip') }}{% if key == 'apiserver' %},
+          IP Address:{{ k8s_salt['api_service_ip'] }},{% for ip in k8s_salt['api_extra_ips'] %}
+          IP Address:{{ ip }},{% endfor %}
           DNS:kubernetes,
           DNS:kubernetes.default,
           DNS:kubernetes.default.svc,
-          DNS:kubernetes.default.svc.cluster.local,
-          IP Address:{{salt['grains.get']('fqdn_ip4')[0]}},
-          IP Address:10.43.0.1,
-          IP Address:127.0.0.1
-    - /etc/kubernetes/pki/proxy-client.pem:
-      - CN: kube-apiserver-proxy-client
-      - signing_private_key: {{ salt['pillar.get']('k8s_certs:requestheader-ca-key', '') | tojson }}
-      - signing_cert: {{ salt['pillar.get']('k8s_certs:requestheader-ca', '') | tojson }}
-      - managed_private_key:
-          name: /etc/kubernetes/pki/proxy-client-key.pem
-          bits: 2048
-      - keyUsage: "critical Digital Signature, Key Encipherment"
-      - extendedKeyUsage: "TLS Web Server Authentication, TLS Web Client Authentication"
+          DNS:kubernetes.default.svc.{{ k8s_salt['cluster_domain'] }}{% endif %}{% endif %}
+  {% endfor %}
 
 place_apiserver_sa_public_key:
   x509.pem_managed:
   - makedirs: True
   - names:
     - /etc/kubernetes/pki/sa.pem:
-      - text: {{ salt['x509.get_public_key'](salt['pillar.get']('k8s_certs:sa-key', '')) }}
+      - text: {{ sa_pubkey | tojson }}
 
 place_k8s_apiserver_service:
   file.managed:
   - name: /etc/systemd/system/kube-apiserver.service
-  - source: salt://files/kubernetes/systemd/kube-apiserver.service
+  - source: salt://{{ slspath }}/templates/kube-apiserver.service
   - mode: '0644'
   - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
   module.run:
   - name: service.systemctl_reload
   - onchanges:
