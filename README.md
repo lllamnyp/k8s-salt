@@ -1,4 +1,4 @@
-# Salt states to manage a k8s cluster
+# Salt formula to manage k8s clusters
 
 ## Contents
 
