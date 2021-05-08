@@ -1,0 +1,21 @@
+[Unit]
+Description=kubelet v{{ k8s_salt['version_kubernetes'] }}: The Kubernetes Node Agent
+Documentation=https://kubernetes.io/docs/home/
+
+[Service]
+ExecStart=/usr/local/bin/kubelet \
+  --config=/etc/kubernetes/config/kubelet-config.yaml \
+  --image-pull-progress-deadline=2m \
+  --kubeconfig=/etc/kubernetes/config/kubelet.kubeconfig \
+  --container-runtime={{ k8s_salt['container_runtime'] }} \
+  --container-runtime-endpoint={{ k8s_salt['container_runtime_endpoint'] }} \
+  --network-plugin=cni \
+  --register-node=true \
+  --hostname-override={{ k8s_salt['hostname_fqdn'] }} \
+  --v=2
+Restart=always
+StartLimitInterval=0
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,87 @@
+{# vi: set ft=sls : #}
+
+{% set k8s_salt = {} %}
+
+### Check if it's worth even running the template
+{% if salt['mine.get']('I@k8s_salt:enabled:True', 'get_k8s_cluster', 'compound').values() | unique | length > 0 %}
+{% if salt['mine.get']('I@k8s_salt:enabled:True', 'get_minion_id', 'compound').values() | unique | length > 0 %}
+
+{% do k8s_salt.update({'arch':salt['pillar.get']('k8s_salt:arch') or salt['grains.get']('osarch') or 'amd64'}) %}
+{% do k8s_salt.update({'cas':['kube-ca','etcd-peer-ca','etcd-trusted-ca','requestheader-ca']}) %}
+
+# Hostname is also a problem
+{% do k8s_salt.update({'hostname_fqdn':salt['pillar.get']('k8s_salt:hostname_fqdn') or salt['grains.get']('fqdn') or salt['grains.get']('id')}) %}
+
+# Try to infer the node's IP 
+# TODO: this ain't easy. There will be a bunch of edge cases to sort out.
+{% if salt['pillar.get']('k8s_salt:ipv6') %}
+  {% if salt['pillar.get']('k8s_salt:network_interface') %}
+    {% do k8s_salt.update({'network_interface':salt['pillar.get']('k8s_salt:network_interface')}) %}
+    {% do k8s_salt.update({'ip':salt['grains.get']('ip6_interfaces')[k8s_salt['network_interface']] | first}) %}
+  {% else %} 
+    {% do k8s_salt.update({'ip':salt['grains.get']('fqdn_ip6') | first}) %}
+  {% endif %}
+{% else %}
+  {% if salt['pillar.get']('k8s_salt:network_interface') %}
+    {% do k8s_salt.update({'network_interface':salt['pillar.get']('k8s_salt:network_interface')}) %}
+{% do salt.log.error(salt['grains.get']('ip4_interfaces')) %}
+    {% do k8s_salt.update({'ip':salt['grains.get']('ip4_interfaces')[k8s_salt['network_interface']] | first}) %}
+  {% else %} 
+    {% do k8s_salt.update({'ip':salt['grains.get']('fqdn_ip4') | first}) %}
+  {% endif %}
+{% endif %}
+{% do salt.log.error(k8s_salt) %}
+# Signing policy constraints
+{% set allowed_minions = {
+                           'etcd-peer-ca':'I@k8s_salt:roles:etcd:True',
+                           'etcd-trusted-ca':'I@k8s_salt:roles:etcd:True or I@k8s_salt:roles:controlplane:True or I@k8s_salt:roles:admin:True',
+                           'requestheader-ca':'I@k8s_salt:roles:controlplane:True',
+                           'kube-ca':'I@k8s_salt:roles:controlplane:True or I@k8s_salt:roles:worker:True'
+                         } %}
+{% do k8s_salt.update({'allowed_minions':allowed_minions}) %}
+
+# CA server
+{% do k8s_salt.update({'ca_server':salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_minion_id', 'compound').popitem()[1]}) %}
+
+# Version info
+{% do k8s_salt.update({'version_kubernetes':salt['pillar.get']('k8s_salt:version:kubernetes') or '1.21.0'}) %}
+{% do k8s_salt.update({'version_etcd':salt['pillar.get']('k8s_salt:version:etcd') or 'v3.4.15'}) %}
+
+# Proxy repos (if necessary)
+{% do k8s_salt.update({'k8s_proxy_repo':salt['pillar.get']('k8s_salt:k8s_proxy_repo') or 'https://storage.googleapis.com/kubernetes-release/release'}) %}
+{% do k8s_salt.update({'etcd_proxy_repo':salt['pillar.get']('k8s_salt:etcd_proxy_repo') or 'https://github.com/etcd-io/etcd/releases/download'}) %}
+
+# K8s binaries
+{% set binaries = [] %}
+{% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
+{% do binaries.append('kube-apiserver') %}
+{% do binaries.append('kube-scheduler') %}
+{% do binaries.append('kube-controller-manager') %}
+{% endif %}
+{% if salt['pillar.get']('k8s_salt:roles:worker') %}
+{% do binaries.append('kube-proxy') %}
+{% do binaries.append('kubelet') %}
+{% endif %}
+{% if salt['pillar.get']('k8s_salt:roles:admin') %}
+{% do binaries.append('kubectl') %}
+{% endif %}
+{% do k8s_salt.update({'k8s_binaries':binaries}) %}
+
+# K8s cluster properties
+{% do k8s_salt.update({'service_cidr':salt['pillar.get']('k8s_salt:service_cidr') or '10.143.0.0/16'}) %}
+{% do k8s_salt.update({'cluster_cidr':salt['pillar.get']('k8s_salt:cluster_cidr') or '10.142.0.0/16'}) %}
+# TODO: derive service ip from service cidr
+{% do k8s_salt.update({'api_service_ip':salt['pillar.get']('k8s_salt:api_service_ip') or '10.143.0.1'}) %}
+# TODO: derive service ip from service cidr
+{% do k8s_salt.update({'dns_service_ip':salt['pillar.get']('k8s_salt:dns_service_ip') or '10.143.0.2'}) %}
+{% do k8s_salt.update({'api_extra_ips':salt['pillar.get']('k8s_salt:api_extra_ips') or []}) %}
+{% do k8s_salt.update({'cluster_domain':salt['pillar.get']('k8s_salt:cluster_domain') or 'cluster.local'}) %}
+{% do k8s_salt.update({'apiserver_balancer_url':salt['pillar.get']('k8s_salt:apiserver_balancer_url') or 'localhost'}) %}
+{% do k8s_salt.update({'apiserver_port':salt['pillar.get']('k8s_salt:apiserver_port') or '6443'}) %}
+{% do k8s_salt.update({'apiserver_balancer_port':salt['pillar.get']('k8s_salt:apiserver_balancer_port') or k8s_salt['apiserver_port']}) %}
+{% do k8s_salt.update({'container_runtime':salt['pillar.get']('k8s_salt:container_runtime') or 'remote'}) %}
+{% do k8s_salt.update({'container_runtime_endpoint':salt['pillar.get']('k8s_salt:container_runtime_endpoint') or 'unix:///var/run/containerd/containerd.sock'}) %}
+
+### End check if it's worth rendering template
+{% endif %}
+{% endif %}
