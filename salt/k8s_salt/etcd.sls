@@ -1,5 +1,6 @@
 {% from './map.jinja' import k8s_salt %}
-{% if salt['pillar.get']('k8s_salt:roles:etcd') %}
+
+{% if salt['pillar.get']('k8s_salt:roles:etcd') or salt['pillar.get']('k8s_salt:roles:admin') %}
 get_etcd_archive:
   file.managed:
   - name: /data/etcd/etcd-{{ k8s_salt['version_etcd'] }}.tar.gz
@@ -20,8 +21,10 @@ place_etcd_binaries:
   file.managed:
   - mode: '0755'
   - names:
+  {% if salt['pillar.get']('k8s_salt:roles:etcd') %}
     - /usr/local/bin/etcd:
       - source: /data/etcd/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}/etcd
+  {% endif %}
     - /usr/local/bin/etcdctl:
       - source: /data/etcd/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}/etcdctl
   - require:
@@ -34,7 +37,12 @@ Etcd private keys:
   - replace: False
   - makedirs: True
   - names:
-  {% for key in ['etcd-peer','etcd-trusted'] %}
+  {% if salt['pillar.get']('k8s_salt:roles:etcd') %}
+    {% set keys = ['etcd-peer','etcd-trusted'] %}
+  {% else %}
+    {% set keys = ['etcd-trusted'] %}
+  {% endif %}
+  {% for key in keys %}
     - /etc/kubernetes/pki/{{ key }}-key.pem:
       - bits: 4096
   {% endfor %}
@@ -43,15 +51,15 @@ Etcd X509 management:
   file.managed:
   - makedirs: True
   - names:
-  {% for ca in ['etcd-peer-ca','etcd-trusted-ca'] %}
-    - /etc/kubernetes/pki/{{ ca }}.pem:
-      - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem'] | tojson }}
+  {% for ca in keys %}
+    - /etc/kubernetes/pki/{{ ca + '-ca' }}.pem:
+      - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '-ca.pem'] | tojson }}
       - mode: '0644'
   {% endfor %}
   x509.certificate_managed:
   - makedirs: True
   - names:
-  {% for key in ['etcd-peer','etcd-trusted'] %}
+  {% for key in keys %}
     - /etc/kubernetes/pki/{{ key }}.pem:
       - CN: {{ salt['grains.get']('k8s_salt:hostname_fqdn') }}
       - ca_server: {{ k8s_salt['ca_server'] }}
@@ -67,6 +75,7 @@ Etcd X509 management:
           IP Address:{{ salt['grains.get']('k8s_salt:ip') }}
   {% endfor %}
 
+  {% if salt['pillar.get']('k8s_salt:roles:etcd') %}
 place_etcd_service:
   file.managed:
   - name: /etc/systemd/system/etcd.service
@@ -85,4 +94,5 @@ run_etcd_unit:
   - enable: True
   - watch:
     - module: place_etcd_service
+  {% endif %}
 {% endif %}

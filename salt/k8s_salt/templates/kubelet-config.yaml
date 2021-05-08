@@ -9,9 +9,9 @@ authentication:
     clientCAFile: "/etc/kubernetes/pki/kube-ca.pem"
 authorization:
   mode: Webhook
-clusterDomain: "cluster.local"
+clusterDomain: {{ k8s_salt['cluster_domain'] | quote }}
 clusterDNS:
-  - "10.43.0.10"
+  - {{ k8s_salt['dns_service_ip'] | quote }}
 maxPods: 110
 podCIDR: ""
 resolvConf: "/etc/resolv.conf"

@@ -1,4 +1,13 @@
 include:
+- .mine_no_deps
+- .distribute_cas
 - .mine
 - .ca
 - .etcd
+- .apiserver
+- .binaries
+- .admin
+- .scheduler
+- .haproxy
+- .cluster_manifests
+- .kubelet

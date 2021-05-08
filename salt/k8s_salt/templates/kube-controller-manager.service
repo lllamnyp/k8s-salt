@@ -1,22 +1,23 @@
 [Unit]
-Description=Kubernetes Controller Manager {{ salt['pillar.get']('controlplane:version') }}
+Description=Kubernetes Controller Manager {{ k8s_salt['version_kubernetes'] }}
 Documentation=https://github.com/kubernetes/kubernetes
 
 [Service]
 ExecStart=/usr/local/bin/kube-controller-manager \
   --allocate-node-cidrs=true \
-  --allow-untagged-cloud=true \
   --bind-address=0.0.0.0 \
   --cloud-provider="" \
-  --cluster-cidr=10.42.0.0/16 \
+  --cluster-cidr={{ k8s_salt['cluster_cidr'] }} \
+  --cluster-name={{ salt['pillar.get']('k8s_salt:cluster') }} \
   --cluster-signing-cert-file=/etc/kubernetes/pki/kube-ca.pem \
-  --cluster-signing-key-file=/etc/kubernetes/pki/kube-ca-key.pem \
   --configure-cloud-routes=false \
   --kubeconfig=/etc/kubernetes/config/controller.kubeconfig \
   --leader-elect=true \
+  --logging-format=json \
+  --port=0 \
   --root-ca-file=/etc/kubernetes/pki/kube-ca.pem \
   --service-account-private-key-file=/etc/kubernetes/pki/sa-key.pem \
-  --service-cluster-ip-range=10.43.0.0/16 \
+  --service-cluster-ip-range={{ k8s_salt['service_cidr'] }} \
   --use-service-account-credentials=true \
   --v=2
 Restart=on-failure

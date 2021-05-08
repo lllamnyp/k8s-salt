@@ -1,7 +1,10 @@
-{% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
-  {% set authorities = salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_authorities', 'compound').popitem()[1] %}
+{% from './map.jinja' import k8s_salt %}
+
+### Check if state worth running
+{% if salt['pillar.get']('k8s_salt:roles:controlplane') and k8s_salt is defined %}
+{% if 'ca_server' in k8s_salt and k8s_salt['ca_server'] %}
+
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-  {% set sa_pubkey = salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_' + cluster + '_sa_keypair', 'compound')popitem()[1]['/etc/kubernetes-authority/' + cluster + '/sa.pem'] %}
 Apiserver private keys:
   x509.private_key_managed:
   - replace: False
@@ -13,22 +16,13 @@ Apiserver private keys:
   {% endfor %}
 
 Apiserver X509 management:
-  file.managed:
-  - makedirs: True
-  - names:
-  {% for ca in ['kube-ca','etcd-trusted-ca','requestheader-ca'] %}
-    - /etc/kubernetes/pki/{{ ca }}.pem:
-      - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '.pem'] | tojson }}
-      - mode: '0644'
-  {% endfor %}
-
   x509.certificate_managed:
   - makedirs: True
   - names:
   {% set policy = {'etcdclient':'etcd-trusted-ca','apiserver':'kube-ca','proxy-client':'requestheader-ca'} %}
   {% for key in ['etcdclient','apiserver','proxy-client'] %}
     - /etc/kubernetes/pki/{{ key }}.pem:
-      - CN: {{ salt['grains.get']('k8s_salt:hostname_fqdn') }}
+      - CN: {{ 'kube-apiserver-' + cluster }}
       - ca_server: {{ k8s_salt['ca_server'] }}
       - public_key: /etc/kubernetes/pki/{{ key }}-key.pem
       - signing_policy: {{ cluster }}_{{ policy[key] }}
@@ -47,13 +41,6 @@ Apiserver X509 management:
           DNS:kubernetes.default.svc,
           DNS:kubernetes.default.svc.{{ k8s_salt['cluster_domain'] }}{% endif %}{% endif %}
   {% endfor %}
-
-place_apiserver_sa_public_key:
-  x509.pem_managed:
-  - makedirs: True
-  - names:
-    - /etc/kubernetes/pki/sa.pem:
-      - text: {{ sa_pubkey | tojson }}
 
 place_k8s_apiserver_service:
   file.managed:
@@ -74,4 +61,7 @@ run_k8s_apiserver_unit:
   - enable: True
   - watch:
     - module: place_k8s_apiserver_service
+
+### End checks if state worth running
+{% endif %}
 {% endif %}

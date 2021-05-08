@@ -1,5 +1,5 @@
 [Unit]
-Description=Kubernetes Scheduler {{ salt['pillar.get']('controlplane:version') }}
+Description=Kubernetes Scheduler {{ salt['pillar.get']('k8s_salt:version:kubernetes') }}
 Documentation=https://github.com/kubernetes/kubernetes
 
 [Service]
