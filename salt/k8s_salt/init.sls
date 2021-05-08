@@ -1,4 +1,5 @@
 include:
+- .pkg
 - .mine_no_deps
 - .distribute_cas
 - .mine
