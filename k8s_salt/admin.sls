@@ -1,7 +1,7 @@
 {% from './map.jinja' import k8s_salt %}
 
 ### Check if state worth running
-{% if salt['pillar.get']('k8s_salt:roles:controlplane') and k8s_salt is defined %}
+{% if salt['pillar.get']('k8s_salt:roles:admin') and k8s_salt is defined %}
 {% if 'ca_server' in k8s_salt and k8s_salt['ca_server'] %}
 
 {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
