@@ -83,8 +83,8 @@ run_haproxy_service:
   - name: haproxy
   - enable: True
   - reload: True
-#   - watch:
-#     - file: place_haproxy_configuration
+  - require:
+    - cmd: place_haproxy_configuration
 
 # TODO: later
 # reload_rsyslog_service:
