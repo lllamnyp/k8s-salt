@@ -33,10 +33,21 @@ Generate corresponding sa public key:
   x509.pem_managed:
   - makedirs: True
   - names:
+    # Just in case there are no matching roles
+    - /etc/kubernetes/pki/dummy.pem:
+      - text: |-
+          -----BEGIN PUBLIC KEY-----
+          MIIC
+          -----END PUBLIC KEY-----
   {% for cluster in clusters %}
+    {% if salt['file.file_exists']('/etc/kubernetes-authority/' + cluster + '/sa-key.pem') -%}
     - /etc/kubernetes-authority/{{ cluster }}/sa.pem:
       - text: {{ salt['x509.get_public_key']('/etc/kubernetes-authority/' + cluster + '/sa-key.pem') }}
+    {% endif %}
   {% endfor %}
+
+  - require:
+    - x509: Generate serviceaccount private key
 
 Generate k8s CA root certs:
   x509.certificate_managed:
