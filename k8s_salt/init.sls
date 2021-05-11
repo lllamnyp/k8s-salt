@@ -8,6 +8,7 @@ include:
 - .apiserver
 - .binaries
 - .admin
+- .controller
 - .scheduler
 - .haproxy
 - .cluster_manifests
