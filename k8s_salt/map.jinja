@@ -36,7 +36,7 @@
                            'etcd-peer-ca':'I@k8s_salt:roles:etcd:True',
                            'etcd-trusted-ca':'I@k8s_salt:roles:etcd:True or I@k8s_salt:roles:controlplane:True or I@k8s_salt:roles:admin:True',
                            'requestheader-ca':'I@k8s_salt:roles:controlplane:True',
-                           'kube-ca':'I@k8s_salt:roles:controlplane:True or I@k8s_salt:roles:worker:True'
+                           'kube-ca':'I@k8s_salt:roles:controlplane:True or I@k8s_salt:roles:worker:True or I@k8s_salt:roles:admin:True'
                          } %}
 {% do k8s_salt.update({'allowed_minions':allowed_minions}) %}
 
