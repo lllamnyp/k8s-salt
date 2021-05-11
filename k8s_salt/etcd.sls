@@ -1,5 +1,6 @@
 {% from './map.jinja' import k8s_salt %}
 
+{% if k8s_salt %}
 {% if salt['pillar.get']('k8s_salt:roles:etcd') or salt['pillar.get']('k8s_salt:roles:admin') %}
 get_etcd_archive:
   file.managed:
@@ -30,32 +31,22 @@ place_etcd_binaries:
   - require:
     - unpack_etcd_archive
 
-  {% set authorities = salt['mine.get']('I@k8s_salt:roles:ca:True', 'get_authorities', 'compound').popitem()[1] %}
-  {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
+  {% set keys = ['etcd-trusted'] %}
+  {% if salt['pillar.get']('k8s_salt:roles:etcd') %}
+    {% do keys.append('etcd-peer') %}
+  {% endif %}
 Etcd private keys:
   x509.private_key_managed:
   - replace: False
   - makedirs: True
   - names:
-  {% if salt['pillar.get']('k8s_salt:roles:etcd') %}
-    {% set keys = ['etcd-peer','etcd-trusted'] %}
-  {% else %}
-    {% set keys = ['etcd-trusted'] %}
-  {% endif %}
   {% for key in keys %}
     - /etc/kubernetes/pki/{{ key }}-key.pem:
       - bits: 4096
   {% endfor %}
 
+  {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 Etcd X509 management:
-  file.managed:
-  - makedirs: True
-  - names:
-  {% for ca in keys %}
-    - /etc/kubernetes/pki/{{ ca + '-ca' }}.pem:
-      - contents: {{ authorities['/etc/kubernetes-authority/' + cluster + '/' + ca + '-ca.pem'] | tojson }}
-      - mode: '0644'
-  {% endfor %}
   x509.certificate_managed:
   - makedirs: True
   - names:
@@ -95,4 +86,5 @@ run_etcd_unit:
   - watch:
     - module: place_etcd_service
   {% endif %}
+{% endif %}
 {% endif %}

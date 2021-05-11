@@ -1,6 +1,7 @@
 {% from './map.jinja' import k8s_salt %}
 
 # TODO: needs validity checks (if k8s_salt is defined, etc)
+{% if k8s_salt %}
 {% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
 
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
@@ -54,4 +55,5 @@ run_scheduler_unit:
   - enable: True
   - watch:
     - module: place_scheduler_service
+{% endif %}
 {% endif %}

@@ -2,7 +2,9 @@
 
 {% if salt['pillar.get']('k8s_salt:roles:admin') %}
 {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-{% if salt['grains.get']('id') == salt['mine.get']('I@k8s_salt:roles:admin:True and I@k8s_salt:cluster:' + cluster, 'get_k8s_data', 'compound').popitem()[0] %}
+{% set admin_machines = salt['mine.get']('I@k8s_salt:roles:admin:True and I@k8s_salt:cluster:' + cluster, 'get_k8s_data', 'compound') %}
+{% if admin_machines | length > 0 %}
+{% if salt['grains.get']('id') == admin_machines.popitem()[0] %}
 
 Place cluster manifests:
   file.managed:
@@ -24,5 +26,6 @@ Place cluster manifests:
         - file: Place cluster manifests
 
 
+{% endif %}
 {% endif %}
 {% endif %}
