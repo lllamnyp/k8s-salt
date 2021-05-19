@@ -6,6 +6,160 @@
 {% if salt['mine.get']('I@k8s_salt:enabled:True', 'get_k8s_cluster', 'compound').values() | unique | length > 0 %}
 {% if salt['mine.get']('I@k8s_salt:enabled:True', 'get_minion_id', 'compound').values() | unique | length > 0 %}
 
+# TODO: template apiVersions depending on k8s version?
+{% set k8s_salt = {
+  'kubelet':{
+    'config':{
+      'kind':'KubeletConfiguration',
+      'apiVersion':'kubelet.config.k8s.io/v1beta1',
+      'enableServer':True,
+      'authentication':{
+        'anonymous':{
+          'enabled':False
+        },
+        'webhook':{
+          'enabled':True
+        },
+        'x509':{
+          'clientCAFile':'/etc/kubernetes/pki/kube-ca.pem'
+        }
+      },
+      'authorization':{
+        'mode':'Webhook'
+      },
+      'clusterDomain':k8s_salt['cluster_domain'],
+      'clusterDNS':[k8s_salt['dns_service_ip']],
+      'maxPods':110,
+      'podCIDR':'',
+      'resolvConf':'/etc/resolv.conf',
+      'rotateCertificates':True,
+      'runtimeRequestTimeout':'15m',
+      'tlsCertFile':'/etc/kubernetes/pki/kubelet.pem',
+      'tlsPrivateKeyFile':'/etc/kubernetes/pki/kubelet-key.pem',
+      'logging':{
+        'format':'json',
+        'sanitization':False
+      }
+    },
+    'flags':{
+      'config':'/etc/kubernetes/config/kubelet-config.yaml',
+      'kubeconfig':'/etc/kubernetes/config/kubelet.kubeconfig',
+      'container-runtime':k8s_salt['container_runtime'],
+      'container-runtime-endpoint':k8s_salt['container_runtime_endpoint'],
+      'network-plugin':'cni',
+      'register-node':'true',
+      'hostname-override':k8s_salt['hostname_fqdn'],
+      'v':2
+    }
+  },
+  'kube-scheduler':{
+    'config':{
+      'apiVersion':'kubescheduler.config.k8s.io/v1beta1',
+      'clientConnection':{
+        'kubeconfig':'/etc/kubernetes/config/scheduler.kubeconfig'
+      },
+      'kind':'KubeSchedulerConfiguration',
+      'leaderElection':{
+        'leaderElect':True
+      }
+    },
+    'flags':{
+      'config':'/etc/kubernetes/config/kube-scheduler-config.yaml',
+      'v':'2'
+    }
+  },
+  'kube-controller-manager':{
+    'flags':{
+      'allocate-node-cidrs':'true',
+      'bind-address':'0.0.0.0',
+      'cloud-provider':'""',
+      'cluster-cidr':k8s_salt['cluster_cidr'],
+      'cluster-name':salt['pillar.get']('k8s_salt:cluster'),
+      'cluster-signing-cert-file':'/etc/kubernetes/pki/kube-ca.pem',
+      'configure-cloud-routes':'false',
+      'kubeconfig':'/etc/kubernetes/config/controller.kubeconfig',
+      'leader-elect':'true',
+      'logging-format':'json',
+      'port':'0',
+      'root-ca-file':'/etc/kubernetes/pki/kube-ca.pem',
+      'service-account-private-key-file':'/etc/kubernetes/pki/sa-key.pem',
+      'service-cluster-ip-range':k8s_salt['service_cidr'],
+      'use-service-account-credentials':'true',
+      'v':'2'
+    }
+  },
+  'kube-apiserver':{
+    'flags':{
+      'advertise-address':'{{ k8s_salt['ip'] }}',
+      'allow-privileged':'true',
+      'anonymous-auth':'false',
+      'apiserver-count':'{{ api_servers | length }}',
+      'audit-log-maxage':'30',
+      'audit-log-maxbackup':'3',
+      'audit-log-maxsize':'100',
+      'audit-log-path':'/var/log/k8s/audit.log',
+      'authorization-mode':'Node,RBAC',
+      'bind-address':'0.0.0.0',
+      'client-ca-file':'/etc/kubernetes/pki/kube-ca.pem',
+      'cloud-provider':'""',
+      'enable-admission-plugins':'NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,NodeRestriction,Priority,TaintNodesByCondition,PersistentVolumeClaimResize',
+      'enable-aggregator-routing':'true',
+      'etcd-cafile':'/etc/kubernetes/pki/etcd-trusted-ca.pem',
+      'etcd-certfile':'/etc/kubernetes/pki/etcdclient.pem',
+      'etcd-keyfile':'/etc/kubernetes/pki/etcdclient-key.pem',
+      'etcd-prefix':'/registry',
+      'etcd-servers':'{% for k, v in etcd_servers.items() %}https://{{v['hostname_fqdn']}}:2379{% if not loop.last %},{% endif %}{% endfor %}',
+      'kubelet-certificate-authority':'/etc/kubernetes/pki/kube-ca.pem',
+      'kubelet-client-certificate':'/etc/kubernetes/pki/apiserver.pem',
+      'kubelet-client-key':'/etc/kubernetes/pki/apiserver-key.pem',
+      'kubelet-preferred-address-types':'InternalIP,ExternalIP,Hostname',
+      'profiling':'false',
+      'proxy-client-cert-file':'/etc/kubernetes/pki/proxy-client.pem',
+      'proxy-client-key-file':'/etc/kubernetes/pki/proxy-client-key.pem',
+      'requestheader-allowed-names':'kube-apiserver-proxy-client',
+      'requestheader-client-ca-file':'/etc/kubernetes/pki/requestheader-ca.pem',
+      'requestheader-extra-headers-prefix':'X-Remote-Extra-',
+      'requestheader-group-headers':'X-Remote-Group',
+      'requestheader-username-headers':'X-Remote-User',
+      'runtime-config':'api/all=true',
+      'secure-port':k8s_salt['apiserver_port'],
+      'service-account-issuer':'https://' + k8s_salt['apiserver_balancer_url'] + ':' + k8s_salt['apiserver_balancer_port'],
+      'service-account-lookup':'true',
+      'service-account-key-file':'/etc/kubernetes/pki/sa.pem',
+      'service-account-signing-key-file':'/etc/kubernetes/pki/sa-key.pem',
+      'service-cluster-ip-range':k8s_salt['service_cidr'],
+      'service-node-port-range':'30000-32767',
+      'storage-backend':'etcd3',
+      'tls-cert-file':'/etc/kubernetes/pki/apiserver.pem',
+      'tls-private-key-file':'/etc/kubernetes/pki/apiserver-key.pem',
+      'tls-cipher-suites':'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305'
+    }
+  },
+  'etcd':{
+    'flags':{
+      'name':'{{ k8s_salt['hostname_fqdn'] }}',
+      'cert-file':'/etc/kubernetes/pki/etcd-trusted.pem',
+      'key-file':'/etc/kubernetes/pki/etcd-trusted-key.pem',
+      'peer-cert-file':'/etc/kubernetes/pki/etcd-peer.pem',
+      'peer-key-file':'/etc/kubernetes/pki/etcd-peer-key.pem',
+      'trusted-ca-file':'/etc/kubernetes/pki/etcd-trusted-ca.pem',
+      'peer-trusted-ca-file':'/etc/kubernetes/pki/etcd-peer-ca.pem',
+      'peer-client-cert-auth':'true',
+      'client-cert-auth':'true',
+      'initial-advertise-peer-urls':'https://{{ k8s_salt['hostname_fqdn'] }}:2380',
+      'listen-peer-urls':'https://0.0.0.0:2380',
+      'listen-client-urls':'https://0.0.0.0:2379',
+      'advertise-client-urls':'https://{{ k8s_salt['hostname_fqdn'] }}:2379',
+      'initial-cluster-token':'{{ cluster }}',
+      'initial-cluster':'{% for k, v in etcd_servers.items() %}{{ v['hostname_fqdn'] }}=https://{{ v['hostname_fqdn'] }}:2380{% if not loop.last %},{% endif %}{% endfor %}',
+      'initial-cluster-state':'new',
+      'logger':'zap',
+      'data-dir':'/var/lib/etcd'
+    }
+  }
+}
+
+
 {% do k8s_salt.update({'arch':salt['pillar.get']('k8s_salt:arch') or salt['grains.get']('osarch') or 'amd64'}) %}
 {% do k8s_salt.update({'cas':['kube-ca','etcd-peer-ca','etcd-trusted-ca','requestheader-ca']}) %}
 
@@ -30,7 +184,7 @@
     {% do k8s_salt.update({'ip':salt['grains.get']('fqdn_ip4') | first}) %}
   {% endif %}
 {% endif %}
-{% do salt.log.error(k8s_salt) %}
+
 # Signing policy constraints
 {% set allowed_minions = {
                            'etcd-peer-ca':'I@k8s_salt:roles:etcd:True',
