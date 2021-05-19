@@ -1,0 +1,136 @@
+k8s_salt:
+
+  ### Mandatory pillars ###
+
+  # Mark for machines to be configured by this formula
+  enabled: True
+
+  # Cluster name, used as an identifier in a number of scenarios, such
+  # as the initial cluster token for the etcd cluster
+  cluster: mycluster
+
+  # Roles for participating machines
+  roles:
+    # Admin machine. A cluster admin kubeconfig file will be created
+    # on this machine at /etc/kubernetes/config/admin.kubeconfig, as
+    # well as certificates for etcd administration by etcdctl in
+    # /etc/kubernetes/pki. At least one admin per cluster is required
+    # to install Cilium and create the roles and rolebindings for kube-
+    # apiserver to kubelet interaction. If no admin machines are
+    # available, the user must perform these actions manually.
+    admin: True
+
+    # The CA server, that hosts all the CA private keys. Exactly one
+    # must exist among all minions, regardless the number of clusters.
+    ca: True
+
+    # Machines with this role will host the apiserver, controller-
+    # manager and the scheduler.
+    controlplane: True
+
+    # Machines with this role will host an etcd server.
+    etcd: True
+
+    # Machines with this role will host a kubelet and join the cluster.
+    worker: True
+
+  ### Cluster network pillars ###
+
+  # The pod network CIDR
+  # (optional)
+  # effective default: as shown
+  cluster_cidr: 10.142.0.0/16
+
+  # The services' CIDR
+  # (optional)
+  # effective default: as shown
+  service_cidr: 10.143.0.0/16
+
+  # In-cluster service IP of the API server. Must match the first
+  # usable IP of the service CIDR.
+  # (optional)
+  # effective default: as shown
+  api_service_ip: 10.143.0.1
+
+  # In-cluster service IP of the kube-dns service
+  # (optional)
+  # effective default: as shown
+  dns_service_ip: 10.143.0.2
+
+  # The additional IPs on which the API server might be available, 
+  # such as load balancer IPs. Will be added to SANs in the x509 cert
+  # (optional)
+  # effective default: []
+  api_extra_ips:
+  - 81.82.83.84
+  - 192.168.1.1
+
+  # Secure port at the load balancer for the api server
+  # (optional)
+  # effective default: as shown
+  apiserver_balancer_port: 6443
+
+  # FQDN of the load balancer (IP also valid). Used as the service
+  # account issuer flag for the apiserver.
+  # (optional)
+  # effective default: localhost
+  apiserver_balancer_url: k8s.example.com
+
+  # Secure port of the api server
+  # (optional)
+  # effective default: as shown
+  apiserver_port: 6443
+
+  # Override for autodetection of machine's processor architecture
+  # (optional)
+  arch: amd64
+
+  # The cluster domain
+  # (optional)
+  # effective default: as shown
+  cluster_domain: cluster.local
+
+  # Value of the container-runtime flag for kubelet
+  # (optional)
+  # effective default: as shown
+  container_runtime: remote
+
+  # Value of the container-runtime-endpoint flag for kubelet
+  # (optional)
+  # effective default: as shown
+  container_runtime_endpoint: unix:///var/run/containerd/containerd.sock
+
+  # Proxy repo for etcd when in air-gapped environment
+  # (optional)
+  etcd_proxy_repo: https://artifactory.example.com/etcd-proxy-repo
+
+  # Override autodetected hostname. Doubles as the nodename of workers.
+  # (optional)
+  hostname_fqdn: node01.k8s.example.com
+
+  # Use IPv6 instead of IPv4
+  # (optional)
+  # effective default: as shown
+  ipv6: False
+
+  # Proxy repo for k8s when in air-gapped environment
+  # (optional)
+  k8s_proxy_repo: https://artifactory.example.com/etcd-proxy-repo
+
+  # Preferred network interface for autodetection of hostname and ip
+  # (optional)
+  network_interface: wlan0
+
+
+  # Version information
+  version:
+    # Version of etcd to use
+    # (optional)
+    # effective default: as shown
+    etcd: v3.4.15
+
+    # Version of kubernetes to use
+    # (optional)
+    # effective default: as shown
+    kubernetes: 1.21.0
+  
