@@ -5,6 +5,9 @@
 ### Check if it's worth even running the template
 {% if salt['mine.get']('I@k8s_salt:enabled:True', 'get_k8s_cluster', 'compound').values() | unique | length > 0 %}
 {% if salt['mine.get']('I@k8s_salt:enabled:True', 'get_minion_id', 'compound').values() | unique | length > 0 %}
+{%- set cluster = salt['pillar.get']('k8s_salt:cluster') %}
+{%- set etcd_selector = 'I@k8s_salt:cluster:' + cluster + ' and I@k8s_salt:roles:etcd:True' %}
+{%- set etcd_servers = salt['mine.get'](etcd_selector, 'get_k8s_data', 'compound') %}
 
 # TODO: template apiVersions depending on k8s version?
 {% set k8s_salt = {
