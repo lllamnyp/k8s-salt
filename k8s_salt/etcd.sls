@@ -1,6 +1,6 @@
 {% from './map.jinja' import k8s_salt %}
 
-{% if k8s_salt %}
+{% if k8s_salt and ('ip' in k8s_salt) %}
 {% if salt['pillar.get']('k8s_salt:roles:etcd') or salt['pillar.get']('k8s_salt:roles:admin') %}
 get_etcd_archive:
   file.managed:

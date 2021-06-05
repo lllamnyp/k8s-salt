@@ -4,7 +4,7 @@
 
 ### Check if state worth running
 {% if clusters | length > 0 and k8s_salt is defined %}
-{% if 'cas' in k8s_salt and k8s_salt['cas'] | length > 0 %}
+{% if ('ip' in k8s_salt) and ('cas' in k8s_salt) and (k8s_salt['cas'] | length > 0) %}
 
 {% if salt['pillar.get']('k8s_salt:roles:ca') %}
 Generate k8s CA private keys:

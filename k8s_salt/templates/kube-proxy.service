@@ -7,7 +7,7 @@ LimitNOFILE=32768
 LimitNOFILESoft=16384
 ExecStart=/usr/local/bin/kube-proxy \
   --config=/etc/kubernetes/config/kube-proxy-config.yaml \
-  --hostname-override={{salt['grains.get']('fqdn_ip4')[0]}}
+  --hostname-override={{ k8s_salt['hostname_fqdn'] }}
 Restart=on-failure
 RestartSec=5
 

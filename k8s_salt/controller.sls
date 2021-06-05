@@ -1,6 +1,7 @@
 # TODO: needs validity checks (if k8s_salt is defined, etc)
 {% from './map.jinja' import k8s_salt %}
 
+{% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
 {% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
 
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
@@ -50,4 +51,5 @@ run_controller_unit:
   - enable: True
   - watch:
     - module: place_controller_service
+{% endif %}
 {% endif %}

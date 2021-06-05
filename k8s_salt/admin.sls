@@ -2,7 +2,7 @@
 
 ### Check if state worth running
 {% if salt['pillar.get']('k8s_salt:roles:admin') and k8s_salt is defined %}
-{% if 'ca_server' in k8s_salt and k8s_salt['ca_server'] %}
+{% if 'ip' in k8s_salt and 'ca_server' in k8s_salt and k8s_salt['ca_server'] %}
 
 {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 Place admin kubeconfig:

@@ -1,5 +1,6 @@
 {% from './map.jinja' import k8s_salt %}
 
+{% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
 {% if salt['pillar.get']('k8s_salt:roles:worker') %}
 
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
@@ -60,4 +61,5 @@ run_kubelet_unit:
   - watch:
     - module: place_kubelet_service
 
+{% endif %}
 {% endif %}
