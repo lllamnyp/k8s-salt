@@ -13,3 +13,4 @@ include:
 - .haproxy
 - .cluster_manifests
 - .kubelet
+- .proxy

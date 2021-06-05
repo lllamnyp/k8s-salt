@@ -18,13 +18,13 @@ place_kubeproxy_files:
   - makedirs: True
   - names:
     - /etc/kubernetes/config/kube-proxy-config.yaml:
-      - source: salt://{{ slspath }}/templates/config/kube-proxy-config.yaml
+      - source: salt://{{ slspath }}/templates/kube-proxy-config.yaml
       - mode: '0644'
       - template: jinja
       - defaults:
           k8s_salt: {{ k8s_salt }}
     - /etc/kubernetes/config/proxy.kubeconfig:
-      - source: salt://{{ slspath }}/templates/config/proxy.kubeconfig
+      - source: salt://{{ slspath }}/templates/proxy.kubeconfig
       - mode: '0644'
       - template: 'jinja'
   x509.certificate_managed:
@@ -43,7 +43,7 @@ place_kubeproxy_files:
 place_kubeproxy_service:
   file.managed:
   - name: /etc/systemd/system/kube-proxy.service
-  - source: salt://files/kubernetes/systemd/kube-proxy.service
+  - source: salt://{{ slspath }}/templates/kube-proxy.service
   - mode: 644
   - template: jinja
 
