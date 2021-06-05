@@ -46,6 +46,8 @@ place_kubeproxy_service:
   - source: salt://{{ slspath }}/templates/kube-proxy.service
   - mode: 644
   - template: jinja
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
 
 reload_kubeproxy_service:
   module.run:
