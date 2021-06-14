@@ -48,11 +48,16 @@ place_kubelet_files:
 place_kubelet_service:
   file.managed:
   - name: /etc/systemd/system/kubelet.service
-  - source: salt://{{ slspath }}/templates/kubelet.service
+  - source: salt://{{ slspath }}/templates/component.service
   - mode: 644
   - template: jinja
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: kubelet
+      description: Kubernetes Node Agent
+      version: {{ k8s_salt['version_kubernetes'] }}
+      doc: https://github.com/kubernetes/kubernetes
+      service_params: ""
   module.run:
   - name: service.systemctl_reload
   - onchanges:

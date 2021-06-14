@@ -45,11 +45,18 @@ place_kubeproxy_files:
 place_kubeproxy_service:
   file.managed:
   - name: /etc/systemd/system/kube-proxy.service
-  - source: salt://{{ slspath }}/templates/kube-proxy.service
+  - source: salt://{{ slspath }}/templates/component.service
   - mode: 644
   - template: jinja
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: kube-proxy
+      description: Kubernetes Kube Proxy
+      version: {{ k8s_salt['version_kubernetes'] }}
+      doc: https://github.com/kubernetes/kubernetes
+      service_params: |-
+        LimitNOFILE=32768
+        LimitNOFILESoft=16384
 
 reload_kubeproxy_service:
   module.run:

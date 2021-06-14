@@ -39,11 +39,16 @@ place_controller_files:
 place_controller_service:
   file.managed:
   - name: /etc/systemd/system/kube-controller-manager.service
-  - source: salt://{{ slspath }}/templates/kube-controller-manager.service
+  - source: salt://{{ slspath }}/templates/component.service
   - mode: '0644'
   - template: 'jinja'
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: kube-controller-manager
+      description: Kubernetes Controller Manager
+      version: {{ k8s_salt['version_kubernetes'] }}
+      doc: https://github.com/kubernetes/kubernetes
+      service_params: ""
   module.run:
   - name: service.systemctl_reload
   - onchanges:

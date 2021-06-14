@@ -45,11 +45,17 @@ Apiserver X509 management:
 place_k8s_apiserver_service:
   file.managed:
   - name: /etc/systemd/system/kube-apiserver.service
-  - source: salt://{{ slspath }}/templates/kube-apiserver.service
+  - source: salt://{{ slspath }}/templates/component.service
   - mode: '0644'
   - template: 'jinja'
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: kube-apiserver
+      description: Kubernetes API Server
+      version: {{ k8s_salt['version_kubernetes'] }}
+      doc: https://github.com/kubernetes/kubernetes
+      service_params: |-
+        LimitNOFILE=65535
   module.run:
   - name: service.systemctl_reload
   - onchanges:
