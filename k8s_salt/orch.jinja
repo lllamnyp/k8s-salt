@@ -1,0 +1,77 @@
+{# vi: set ft=sls : #}
+
+{% set server_pillars = salt['saltutil.runner']('cache.pillar',['*']) %}
+{% set server_grains = salt['saltutil.runner']('cache.grains',['*']) %}
+
+{% set servers = [] %}
+{% for k, v in server_pillars.items() %}
+  {% do servers.append(k) %}
+{% endfor %}
+
+{% set clusters = [] %}
+{% for k in servers %}
+  {% if 'k8s_salt' not in server_pillars[k] or not server_pillars[k]['k8s_salt'].get('enabled', False) or 'roles' not in server_pillars[k]['k8s_salt'] %}
+    {% do server_pillars.pop(k) %}
+    {% do server_grains.pop(k) %}
+  {% endif %}
+{% endfor %}
+
+{% set servers = [] %}
+{% for k, v in server_pillars.items() %}
+  {% do servers.append(k) %}
+{% endfor %}
+
+{% set inverted_roles = {} %}
+
+{% for k, v in server_pillars.items() %}
+  {% if 'cluster' in v['k8s_salt'] %}
+    {% do clusters.append(v['k8s_salt']['cluster']) %}
+    {% do inverted_roles.update({v['k8s_salt']['cluster']:{'etcd':[],'controlplane':[]} }) %}
+  {% endif %}
+{% endfor %}
+{% set clusters = clusters | unique | sort %}
+
+{% set ca_server = {} %}
+{% for k, v in server_pillars.items() %}
+  {% if 'cluster' in v['k8s_salt'] %}
+    {% for role in ['etcd', 'controlplane'] %}
+      {% if role in v['k8s_salt']['roles'] and v['k8s_salt']['roles'][role] %}
+        {% do inverted_roles[v['k8s_salt']['cluster']][role].append(k) %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% if 'ca' in v['k8s_salt']['roles'] and v['k8s_salt']['roles']['ca'] %}
+    {% do ca_server.update({'id':k}) %}
+  {% endif %}
+{% endfor %}
+
+{% for cluster in clusters %}
+  {% for role in ['etcd', 'controlplane'] %}
+    {% do inverted_roles[cluster].update({role: inverted_roles[cluster][role] | sort}) %}
+  {% endfor %}
+{% endfor %}
+
+{% set host_info = {} %}
+{% for k in servers %}
+  {% if 'hostname_fqdn' in server_pillars[k]['k8s_salt'] %}
+    {% do host_info.update({k: {'hostname_fqdn':server_pillars[k]['k8s_salt']['hostname_fqdn']} }) %}
+  {% else %}
+    {% do host_info.update({k: {'hostname_fqdn':server_grains[k]['fqdn'] or server_grains[k]['id']} }) %}
+  {% endif %}
+  {% if 'ipv6' in server_pillars[k]['k8s_salt'] and server_pillars[k]['k8s_salt']['ipv6'] %}
+    {% if 'network_interface' in server_pillars[k]['k8s_salt'] %}
+      {% do host_info[k].update({'network_interface':server_pillars[k]['k8s_salt']['network_interface']}) %}
+      {% do host_info[k].update({'ip':server_grains[k]['ip6_interfaces'][host_info[k]['network_interface']] | first}) %}
+    {% else %} 
+      {% do host_info[k].update({'ip':server_grains[k]['fqdn_ip6'] | first}) %}
+    {% endif %}
+  {% else %}
+    {% if 'network_interface' in server_pillars[k]['k8s_salt'] %}
+      {% do host_info[k].update({'network_interface':server_pillars[k]['k8s_salt']['network_interface']}) %}
+      {% do host_info[k].update({'ip':server_grains[k]['ip4_interfaces'][host_info[k]['network_interface']] | first}) %}
+    {% else %} 
+      {% do host_info[k].update({'ip':server_grains[k]['fqdn_ip4'] | first}) %}
+    {% endif %}
+  {% endif %}
+{% endfor %}

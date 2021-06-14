@@ -6,7 +6,7 @@ get_etcd_archive:
   file.managed:
   - name: /data/etcd/etcd-{{ k8s_salt['version_etcd'] }}.tar.gz
   - source: {{ k8s_salt['etcd_proxy_repo'] }}/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}.tar.gz
-  - skip_verify: true
+  - source_hash: {{ k8s_salt['etcd_proxy_repo'] }}/{{ k8s_salt['version_etcd'] }}/SHA256SUMS
   - user: root
   - mode: 644
   - makedirs: True

@@ -4,22 +4,8 @@ Documentation=https://github.com/kubernetes/kubernetes
 
 [Service]
 ExecStart=/usr/local/bin/kube-controller-manager \
-  --allocate-node-cidrs=true \
-  --bind-address=0.0.0.0 \
-  --cloud-provider="" \
-  --cluster-cidr={{ k8s_salt['cluster_cidr'] }} \
-  --cluster-name={{ salt['pillar.get']('k8s_salt:cluster') }} \
-  --cluster-signing-cert-file=/etc/kubernetes/pki/kube-ca.pem \
-  --configure-cloud-routes=false \
-  --kubeconfig=/etc/kubernetes/config/controller.kubeconfig \
-  --leader-elect=true \
-  --logging-format=json \
-  --port=0 \
-  --root-ca-file=/etc/kubernetes/pki/kube-ca.pem \
-  --service-account-private-key-file=/etc/kubernetes/pki/sa-key.pem \
-  --service-cluster-ip-range={{ k8s_salt['service_cidr'] }} \
-  --use-service-account-credentials=true \
-  --v=2
+{%- for k, v in k8s_salt['kube-controller-manager']['flags'].items() %}
+  --{{ k }}={{ v }}{% if not loop.last %} \{% endif %}{% endfor %}
 Restart=on-failure
 RestartSec=5
 

@@ -14,17 +14,22 @@ Scheduler private key:
     - /etc/kubernetes/pki/scheduler-key.pem:
       - bits: 4096
 
+place_scheduler_config:
+  file.serialize:
+  - name: /etc/kubernetes/config/kube-scheduler-config.yaml
+  - dataset: {{ k8s_salt['kube-scheduler']['config'] | yaml }}
+  - formatter: yaml
+
 place_scheduler_files:
   file.managed:
   - makedirs: True
+  - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
   - names:
-    - /etc/kubernetes/config/kube-scheduler-config.yaml:
-      - source: salt://{{ slspath }}/templates/kube-scheduler-config.yaml
-        mode: '0644'
     - /etc/kubernetes/config/scheduler.kubeconfig:
       - source: salt://{{ slspath }}/templates/scheduler.kubeconfig
         mode: '0644'
-
   x509.certificate_managed:
   - makedirs: True
   - names:
@@ -44,10 +49,13 @@ place_scheduler_service:
   - source: salt://{{ slspath }}/templates/kube-scheduler.service
   - mode: '0644'
   - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
   module.run:
   - name: service.systemctl_reload
   - onchanges:
     - file: place_scheduler_service
+    - file: place_scheduler_config
 
 run_scheduler_unit:
   service.running:

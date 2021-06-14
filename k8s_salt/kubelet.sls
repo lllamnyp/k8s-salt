@@ -13,16 +13,19 @@ Kubelet private key:
     - /etc/kubernetes/pki/kubelet-key.pem:
       - bits: 4096
 
+place_kubelet_config:
+  file.serialize:
+  - name: /etc/kubernetes/config/kubelet-config.yaml
+  - dataset: {{ k8s_salt['kubelet']['config'] | yaml }}
+  - formatter: yaml
+
 place_kubelet_files:
   file.managed:
+  - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
   - makedirs: True
   - names:
-    - /etc/kubernetes/config/kubelet-config.yaml:
-      - source: salt://{{ slspath }}/templates/kubelet-config.yaml
-      - mode: '0644'
-      - template: jinja
-      - defaults:
-          k8s_salt: {{ k8s_salt }}
     - /etc/kubernetes/config/kubelet.kubeconfig:
       - source: salt://{{ slspath }}/templates/kubelet.kubeconfig
       - mode: '0644'

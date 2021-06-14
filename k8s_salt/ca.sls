@@ -1,6 +1,6 @@
 {% from './map.jinja' import k8s_salt %}
 
-{% set clusters = salt['mine.get']('I@k8s_salt:enabled and I@k8s_salt:cluster', 'get_k8s_cluster', 'compound').values() | unique %}
+{% set clusters = salt['pillar.get']('k8s_overdata:clusters') %}
 
 ### Check if state worth running
 {% if clusters | length > 0 and k8s_salt is defined %}
@@ -45,7 +45,6 @@ Generate corresponding sa public key:
       - text: {{ salt['x509.get_public_key']('/etc/kubernetes-authority/' + cluster + '/sa-key.pem') }}
     {% endif %}
   {% endfor %}
-
   - require:
     - x509: Generate serviceaccount private key
 
@@ -99,37 +98,8 @@ Create directory for copypath:
   file.directory:
   - name: /etc/pki/issued_certs
 
-Place signing policy on CA server:
-  file.managed:
-  - names:
-    - /etc/salt/minion.d/signing_policies.conf:
-      - source: salt://k8s_salt/templates/signing_policies.conf
-      - template: jinja
-      - defaults:
-          k8s_salt: {{ k8s_salt }}
-          clusters: {{ clusters }}
-  cmd.run:
-  - name: 'sleep 5; salt-call service.restart salt-minion'
-  - bg: True
-  - onchanges:
-    - file: Place signing policy on CA server
 {% endif %}
 
 # End check if state worth running
 {% endif %}
 {% endif %}
-
-# This happens on potentially different machine so can run anyway
-{% if salt['service.status']('salt-master') %}
-Allow minions to request certs:
-  file.managed:
-  - names:
-    - /etc/salt/master.d/peer.conf:
-      - source: salt://k8s_salt/templates/peer.conf
-  cmd.run:
-  - name: 'sleep 5; salt-call service.restart salt-master'
-  - bg: True
-  - onchanges:
-    - file: Allow minions to request certs
-{% endif %}
-

@@ -4,15 +4,8 @@ Documentation=https://kubernetes.io/docs/home/
 
 [Service]
 ExecStart=/usr/local/bin/kubelet \
-  --config=/etc/kubernetes/config/kubelet-config.yaml \
-  --image-pull-progress-deadline=2m \
-  --kubeconfig=/etc/kubernetes/config/kubelet.kubeconfig \
-  --container-runtime={{ k8s_salt['container_runtime'] }} \
-  --container-runtime-endpoint={{ k8s_salt['container_runtime_endpoint'] }} \
-  --network-plugin=cni \
-  --register-node=true \
-  --hostname-override={{ k8s_salt['hostname_fqdn'] }} \
-  --v=2
+{%- for k, v in k8s_salt['kubelet']['flags'].items() %}
+  --{{ k }}={{ v }}{% if not loop.last %} \{% endif %}{% endfor %}
 Restart=always
 StartLimitInterval=0
 RestartSec=10
