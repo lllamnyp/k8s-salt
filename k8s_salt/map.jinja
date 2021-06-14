@@ -3,6 +3,24 @@
 {% set k8s_salt = {} %}
 {% set id = salt['grains.get']('id') %}
 
+# Deep merge nested dicts
+{%- macro deep_merge(a, b) %}
+  {%- for k,v in b.items() %}
+    {%- if v is not defined %}
+      {%- do a.pop(k) %}
+    {%- else %}
+      {%- if v is mapping %}
+        {%- if a[k] is not mapping %}
+          {%- do a.update({ k: { } }) %}
+        {%- endif %}
+        {%- do deep_merge(a[k], v) %}
+      {%- else %}
+        {%- do a.update({ k: v }) %}
+      {%- endif %}
+    {% endif %}
+  {%- endfor %}
+{%- endmacro %}
+
 ### Check if it's worth even running the template
 {%- set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 {%- set host_info = salt['pillar.get']('k8s_overdata:host_info') %}
@@ -43,6 +61,21 @@
 
 # TODO: template apiVersions depending on k8s version?
 {% do k8s_salt.update({
+  'kube-proxy':{
+    'config':{
+      'kind':'KubeProxyConfiguration',
+      'apiVersion':'kubeproxy.config.k8s.io/v1alpha1',
+      'clientConnection':{
+        'kubeconfig':'/etc/kubernetes/config/proxy.kubeconfig'
+      },
+      'mode':'iptables',
+      'clusterCIDR':k8s_salt['cluster_cidr']
+    },
+    'flags':{
+      'config':'/etc/kubernetes/config/kube-proxy-config.yaml',
+      'hostname-override':'k8s_salt['hostname_fqdn']
+    }
+  },
   'kubelet':{
     'config':{
       'kind':'KubeletConfiguration',
@@ -196,6 +229,12 @@
   }
 }) %}
 
+{% for svc in ['kube-proxy', 'kube-apiserver', 'kube-controller-manager', 'kube-scheduler', 'kubelet', 'etcd'] %}
+  {% set svc_config = salt['pillar.get']('k8s_salt:'~svc) %}
+  {% if svc_config is mapping %}
+    {% do deep_merge(k8s_salt[svc], svc_config %}
+  {% endif %}
+{% endfor %}
 
 {% do k8s_salt.update({'arch':salt['pillar.get']('k8s_salt:arch') or salt['grains.get']('osarch') or 'amd64'}) %}
 {% do k8s_salt.update({'cas':['kube-ca','etcd-peer-ca','etcd-trusted-ca','requestheader-ca']}) %}
@@ -239,5 +278,6 @@
 {% endif %}
 {% do k8s_salt.update({'k8s_binaries':binaries}) %}
 
+{% do salt.log.debug(k8s_salt) %}
 
 ### End check if it's worth rendering template

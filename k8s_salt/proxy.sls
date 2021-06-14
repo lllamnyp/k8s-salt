@@ -1,7 +1,7 @@
 {% from './map.jinja' import k8s_salt %}
 
 {% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
-{% if salt['pillar.get']('k8s_salt:roles:worker') %}
+{% if salt['pillar.get']('k8s_salt:roles:worker') and k8s_salt['kube-proxy'].get('run', True) %}
 
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 # TODO: factor out private key into macro
@@ -13,20 +13,22 @@ Proxy private key:
     - /etc/kubernetes/pki/proxy-key.pem:
       - bits: 4096
 
+place_kubeproxy_config:
+  file.serialize:
+  - name: /etc/kubernetes/config/kube-proxy-config.yaml
+  - dataset: {{ k8s_salt['kube-proxy']['config'] | yaml }}
+  - formatter: yaml
+
 place_kubeproxy_files:
   file.managed:
   - makedirs: True
+  - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
+      component: proxy
   - names:
-    - /etc/kubernetes/config/kube-proxy-config.yaml:
-      - source: salt://{{ slspath }}/templates/kube-proxy-config.yaml
-      - mode: '0644'
-      - template: jinja
-      - defaults:
-          k8s_salt: {{ k8s_salt }}
     - /etc/kubernetes/config/proxy.kubeconfig:
-      - source: salt://{{ slspath }}/templates/proxy.kubeconfig
-      - mode: '0644'
-      - template: 'jinja'
+      - source: salt://{{ slspath }}/templates/component.kubeconfig
   x509.certificate_managed:
   - makedirs: True
   - names:

@@ -17,9 +17,13 @@ Controller-manager private key:
 place_controller_files:
   file.managed:
   - makedirs: True
+  - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
+      component: controller
   - names:
     - /etc/kubernetes/config/controller.kubeconfig:
-      - source: salt://{{ slspath }}/templates/controller.kubeconfig
+      - source: salt://{{ slspath }}/templates/component.kubeconfig
         mode: '0644'
   x509.certificate_managed:
   - makedirs: True

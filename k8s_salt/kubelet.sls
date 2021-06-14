@@ -24,10 +24,11 @@ place_kubelet_files:
   - template: 'jinja'
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: kubelet
   - makedirs: True
   - names:
     - /etc/kubernetes/config/kubelet.kubeconfig:
-      - source: salt://{{ slspath }}/templates/kubelet.kubeconfig
+      - source: salt://{{ slspath }}/templates/component.kubeconfig
       - mode: '0644'
   x509.certificate_managed:
   - makedirs: True

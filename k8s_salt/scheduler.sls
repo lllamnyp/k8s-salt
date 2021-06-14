@@ -26,9 +26,10 @@ place_scheduler_files:
   - template: 'jinja'
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: scheduler
   - names:
     - /etc/kubernetes/config/scheduler.kubeconfig:
-      - source: salt://{{ slspath }}/templates/scheduler.kubeconfig
+      - source: salt://{{ slspath }}/templates/component.kubeconfig
         mode: '0644'
   x509.certificate_managed:
   - makedirs: True

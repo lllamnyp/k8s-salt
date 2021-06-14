@@ -109,6 +109,7 @@ Start workers:
   - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True'
   - tgt_type: compound
   - sls:
+    - {{ slspath }}.cni
     - {{ slspath }}.kubelet
     - {{ slspath }}.proxy
   - pillar: *pillar
