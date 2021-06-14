@@ -31,6 +31,13 @@ Download k8s binaries:
         host_info: {{ host_info }}
         ca_server: {{ ca_server }}
 
+Python3 M2Crypto for signing certs:
+  salt.state:
+  - tgt: 'I@k8s_salt:enabled:True'
+  - tgt_type: compound
+  - sls:
+    - {{ slspath }}.m2crypto
+
 Enable signing policies on ca:
   salt.state:
   - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:ca:True'
@@ -58,6 +65,7 @@ Generate CA certs:
   - pillar: *pillar
   - require:
     - salt: Wait for ca reboot
+    - salt: Python3 M2Crypto for signing certs
 
 Distribute CA certs:
   salt.state:
