@@ -69,7 +69,7 @@ Generate CA certs:
 
 Distribute CA certs:
   salt.state:
-  - tgt: 'I@k8s_salt:enabled:True'
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:cluster'
   - tgt_type: compound
   - sls:
     - {{ slspath }}.distribute_cas

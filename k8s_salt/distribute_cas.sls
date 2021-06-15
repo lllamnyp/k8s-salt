@@ -1,3 +1,5 @@
+Do nothing if jinja renders empty:
+  test.nop
 
 ### Checks if worth trying to run state
 {% if salt['pillar.get']('k8s_salt:enabled') and salt['pillar.get']('k8s_salt:cluster') %}
