@@ -1,11 +1,10 @@
 {% from './map.jinja' import k8s_salt %}
-{% if 'arch' in k8s_salt %}
-{% if salt['pillar.get']('k8s_salt:roles:worker') %}
+{% if 'arch' in k8s_salt and salt['pillar.get']('k8s_salt:roles:worker') and salt['pillar.get']('k8s_salt:install_loopback_plugin') %}
 get_cni_archive:
   file.managed:
   - name: /data/cni/cni.tar.gz
-  - source: https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-{{ k8s_salt['arch'] }}-v0.9.1.tgz
-  - source_hash: https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-{{ k8s_salt['arch'] }}-v0.9.1.tgz.sha256
+  - source: {{ k8s_salt['cni_proxy_repo'] }}/{{ k8s_salt['version_cni'] }}/cni-plugins-linux-{{ k8s_salt['arch'] }}-{{ k8s_salt['version_cni'] }}.tgz
+  - source_hash: {{ k8s_salt['cni_proxy_repo'] }}/{{ k8s_salt['version_cni'] }}/cni-plugins-linux-{{ k8s_salt['arch'] }}-{{ k8s_salt['version_cni'] }}.tgz.sha256
   - user: root
   - mode: 644
   - makedirs: True
@@ -25,5 +24,7 @@ place_cni_binaries:
       - source: /data/cni/loopback
   - require:
     - unpack_cni_archive
-{% endif %}
+{% else %}
+Do not install loopback plugin:
+  test.nop
 {% endif %}
