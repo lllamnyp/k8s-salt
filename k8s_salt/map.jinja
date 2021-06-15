@@ -232,7 +232,7 @@
 {% for svc in ['kube-proxy', 'kube-apiserver', 'kube-controller-manager', 'kube-scheduler', 'kubelet', 'etcd'] %}
   {% set svc_config = salt['pillar.get']('k8s_salt:'~svc) %}
   {% if svc_config is mapping %}
-    {% do deep_merge(k8s_salt[svc], svc_config %}
+    {% do deep_merge(k8s_salt[svc], svc_config) %}
   {% endif %}
 {% endfor %}
 
