@@ -1,15 +1,2 @@
 include:
-- .pkg
-- .mine_no_deps
-- .distribute_cas
-- .mine
-- .ca
-- .etcd
-- .apiserver
-- .binaries
-- .admin
-- .controller
-- .scheduler
-- .haproxy
-- .cluster_manifests
-- .kubelet
+- .orch

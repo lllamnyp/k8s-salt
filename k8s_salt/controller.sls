@@ -1,6 +1,7 @@
 # TODO: needs validity checks (if k8s_salt is defined, etc)
 {% from './map.jinja' import k8s_salt %}
 
+{% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
 {% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
 
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
@@ -16,9 +17,13 @@ Controller-manager private key:
 place_controller_files:
   file.managed:
   - makedirs: True
+  - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
+      component: controller
   - names:
     - /etc/kubernetes/config/controller.kubeconfig:
-      - source: salt://{{ slspath }}/templates/controller.kubeconfig
+      - source: salt://{{ slspath }}/templates/component.kubeconfig
         mode: '0644'
   x509.certificate_managed:
   - makedirs: True
@@ -34,11 +39,16 @@ place_controller_files:
 place_controller_service:
   file.managed:
   - name: /etc/systemd/system/kube-controller-manager.service
-  - source: salt://{{ slspath }}/templates/kube-controller-manager.service
+  - source: salt://{{ slspath }}/templates/component.service
   - mode: '0644'
   - template: 'jinja'
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: kube-controller-manager
+      description: Kubernetes Controller Manager
+      version: {{ k8s_salt['version_kubernetes'] }}
+      doc: https://github.com/kubernetes/kubernetes
+      service_params: ""
   module.run:
   - name: service.systemctl_reload
   - onchanges:
@@ -50,4 +60,5 @@ run_controller_unit:
   - enable: True
   - watch:
     - module: place_controller_service
+{% endif %}
 {% endif %}

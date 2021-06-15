@@ -1,29 +1,43 @@
-{% if salt['pillar.get']('k8s_salt:roles:worker') %}
+{% from './map.jinja' import k8s_salt %}
+
+{% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
+{% if salt['pillar.get']('k8s_salt:roles:worker') and k8s_salt['kube-proxy'].get('run', True) %}
+
+  {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
+# TODO: factor out private key into macro
+Proxy private key:
+  x509.private_key_managed:
+  - replace: False
+  - makedirs: True
+  - names:
+    - /etc/kubernetes/pki/proxy-key.pem:
+      - bits: 4096
+
+place_kubeproxy_config:
+  file.serialize:
+  - name: /etc/kubernetes/config/kube-proxy-config.yaml
+  - dataset: {{ k8s_salt['kube-proxy']['config'] | yaml }}
+  - formatter: yaml
+
 place_kubeproxy_files:
   file.managed:
   - makedirs: True
+  - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
+      component: proxy
   - names:
-    - /etc/kubernetes/pki/kube-ca.pem:
-      - contents_pillar: k8s_certs:kube-ca
-        mode: '0644'
-    - /etc/kubernetes/config/kube-proxy-config.yaml:
-      - source: salt://files/kubernetes/config/kube-proxy-config.yaml
-        mode: '0644'
     - /etc/kubernetes/config/proxy.kubeconfig:
-      - source: salt://files/kubernetes/config/proxy.kubeconfig
-        mode: '0644'
-        template: 'jinja'
+      - source: salt://{{ slspath }}/templates/component.kubeconfig
   x509.certificate_managed:
   - makedirs: True
   - names:
     - /etc/kubernetes/pki/proxy.pem:
+      - ca_server: {{ k8s_salt['ca_server'] }}
+      - public_key: /etc/kubernetes/pki/proxy-key.pem
+      - signing_policy: {{ cluster }}_kube-ca
       - CN: system:kube-proxy
       - O: system:node-proxier
-      - signing_private_key: {{ salt['pillar.get']('k8s_certs:kube-ca-key', '') | tojson }}
-      - signing_cert: {{ salt['pillar.get']('k8s_certs:kube-ca', '') | tojson }}
-      - managed_private_key:
-          name: /etc/kubernetes/pki/proxy-key.pem
-          bits: 2048
       - keyUsage: "critical Digital Signature, Key Encipherment"
       - extendedKeyUsage: "TLS Web Server Authentication, TLS Web Client Authentication"
       - basicConstraints: "critical CA:FALSE"
@@ -31,9 +45,18 @@ place_kubeproxy_files:
 place_kubeproxy_service:
   file.managed:
   - name: /etc/systemd/system/kube-proxy.service
-  - source: salt://files/kubernetes/systemd/kube-proxy.service
+  - source: salt://{{ slspath }}/templates/component.service
   - mode: 644
   - template: jinja
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
+      component: kube-proxy
+      description: Kubernetes Kube Proxy
+      version: {{ k8s_salt['version_kubernetes'] }}
+      doc: https://github.com/kubernetes/kubernetes
+      service_params: |-
+        LimitNOFILE=32768
+        LimitNOFILESoft=16384
 
 reload_kubeproxy_service:
   module.run:
@@ -47,4 +70,5 @@ run_kubeproxy_unit:
   - enable: True
   - watch:
     - module: reload_kubeproxy_service
+{% endif %}
 {% endif %}

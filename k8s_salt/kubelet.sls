@@ -1,5 +1,6 @@
 {% from './map.jinja' import k8s_salt %}
 
+{% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
 {% if salt['pillar.get']('k8s_salt:roles:worker') %}
 
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
@@ -12,18 +13,22 @@ Kubelet private key:
     - /etc/kubernetes/pki/kubelet-key.pem:
       - bits: 4096
 
+place_kubelet_config:
+  file.serialize:
+  - name: /etc/kubernetes/config/kubelet-config.yaml
+  - dataset: {{ k8s_salt['kubelet']['config'] | yaml }}
+  - formatter: yaml
+
 place_kubelet_files:
   file.managed:
+  - template: 'jinja'
+  - defaults:
+      k8s_salt: {{ k8s_salt }}
+      component: kubelet
   - makedirs: True
   - names:
-    - /etc/kubernetes/config/kubelet-config.yaml:
-      - source: salt://{{ slspath }}/templates/kubelet-config.yaml
-      - mode: '0644'
-      - template: jinja
-      - defaults:
-          k8s_salt: {{ k8s_salt }}
     - /etc/kubernetes/config/kubelet.kubeconfig:
-      - source: salt://{{ slspath }}/templates/kubelet.kubeconfig
+      - source: salt://{{ slspath }}/templates/component.kubeconfig
       - mode: '0644'
   x509.certificate_managed:
   - makedirs: True
@@ -43,11 +48,16 @@ place_kubelet_files:
 place_kubelet_service:
   file.managed:
   - name: /etc/systemd/system/kubelet.service
-  - source: salt://{{ slspath }}/templates/kubelet.service
+  - source: salt://{{ slspath }}/templates/component.service
   - mode: 644
   - template: jinja
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: kubelet
+      description: Kubernetes Node Agent
+      version: {{ k8s_salt['version_kubernetes'] }}
+      doc: https://github.com/kubernetes/kubernetes
+      service_params: ""
   module.run:
   - name: service.systemctl_reload
   - onchanges:
@@ -60,4 +70,5 @@ run_kubelet_unit:
   - watch:
     - module: place_kubelet_service
 
+{% endif %}
 {% endif %}

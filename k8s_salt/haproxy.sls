@@ -2,6 +2,7 @@
 
 # TODO: needs validity checks (if k8s_salt is defined, etc)
 
+{% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
 {% if salt['pillar.get']('k8s_salt:roles:worker') and not salt['pillar.get']('k8s_salt:roles:controlplane')  %}
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 # TODO: look for alternatives for rpm-based systems
@@ -48,15 +49,17 @@ place_haproxy_configuration:
   - names:
     - /etc/logrotate.d/haproxy_logrotate:
       - source: salt://{{ slspath }}/templates/haproxy_logrotate
-        mode: '0644'
-      # TODO: later
-      #      - /etc/rsyslog.d/40-haproxy_rsyslog.conf:
-      #        - source: salt://{{ slspath }}/templates/40-haproxy_rsyslog.conf
-      #          mode: '0644'
+      - mode: '0644'
+# TODO: later
+#       - /etc/rsyslog.d/40-haproxy_rsyslog.conf:
+#         - source: salt://{{ slspath }}/templates/40-haproxy_rsyslog.conf
+#         - mode: '0644'
     - /etc/haproxy/haproxy.cfg:
       - source: salt://{{ slspath }}/templates/haproxy.cfg
-        mode: '0644'
-        template: 'jinja'
+      - mode: '0644'
+      - template: 'jinja'
+      - defaults:
+          k8s_salt: {{ k8s_salt }}
   x509.certificate_managed:
   - makedirs: True
   - names:
@@ -93,4 +96,5 @@ run_haproxy_service:
 #     - enable: True
 #     - watch:
 #       - file: place_haproxy_configuration
+{% endif %}
 {% endif %}

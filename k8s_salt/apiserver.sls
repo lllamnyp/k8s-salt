@@ -2,7 +2,7 @@
 
 ### Check if state worth running
 {% if salt['pillar.get']('k8s_salt:roles:controlplane') and k8s_salt is defined %}
-{% if 'ca_server' in k8s_salt and k8s_salt['ca_server'] %}
+{% if ('ca_server' in k8s_salt) %}
 
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 Apiserver private keys:
@@ -46,11 +46,17 @@ Apiserver X509 management:
 place_k8s_apiserver_service:
   file.managed:
   - name: /etc/systemd/system/kube-apiserver.service
-  - source: salt://{{ slspath }}/templates/kube-apiserver.service
+  - source: salt://{{ slspath }}/templates/component.service
   - mode: '0644'
   - template: 'jinja'
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      component: kube-apiserver
+      description: Kubernetes API Server
+      version: {{ k8s_salt['version_kubernetes'] }}
+      doc: https://github.com/kubernetes/kubernetes
+      service_params: |-
+        LimitNOFILE=65535
   module.run:
   - name: service.systemctl_reload
   - onchanges:

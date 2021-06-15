@@ -1,7 +1,4 @@
 {# vi: set ft=jinja : #}
-{%- set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-{%- set etcd_selector = 'I@k8s_salt:cluster:' + cluster + ' and I@k8s_salt:roles:etcd:True' %}
-{%- set etcd_servers = salt['mine.get'](etcd_selector, 'get_k8s_data', 'compound') %}
 [Unit]
 Description=etcd
 Documentation=https://github.com/coreos
@@ -12,24 +9,8 @@ Environment="ETCD_UNSUPPORTED_ARCH={{ k8s_salt['arch'] }}"
 {% endif %}
 Type=notify
 ExecStart=/usr/local/bin/etcd \
-  --name={{ k8s_salt['hostname_fqdn'] }} \
-  --cert-file=/etc/kubernetes/pki/etcd-trusted.pem \
-  --key-file=/etc/kubernetes/pki/etcd-trusted-key.pem \
-  --peer-cert-file=/etc/kubernetes/pki/etcd-peer.pem \
-  --peer-key-file=/etc/kubernetes/pki/etcd-peer-key.pem \
-  --trusted-ca-file=/etc/kubernetes/pki/etcd-trusted-ca.pem \
-  --peer-trusted-ca-file=/etc/kubernetes/pki/etcd-peer-ca.pem \
-  --peer-client-cert-auth \
-  --client-cert-auth \
-  --initial-advertise-peer-urls https://{{ k8s_salt['hostname_fqdn'] }}:2380 \
-  --listen-peer-urls https://0.0.0.0:2380 \
-  --listen-client-urls https://0.0.0.0:2379 \
-  --advertise-client-urls https://{{ k8s_salt['hostname_fqdn'] }}:2379 \
-  --initial-cluster-token {{ cluster }} \
-  --initial-cluster {% for k, v in etcd_servers.items() %}{{ v['hostname_fqdn'] }}=https://{{ v['hostname_fqdn'] }}:2380{% if not loop.last %},{% endif %}{% endfor %} \
-  --initial-cluster-state new \
-  --logger zap \
-  --data-dir=/var/lib/etcd
+{%- for k, v in k8s_salt['etcd']['flags'].items() %}
+  --{{ k }}={{ v }}{% if not loop.last %} \{% endif %}{% endfor %}
 Restart=on-failure
 RestartSec=5
 
