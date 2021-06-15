@@ -35,7 +35,8 @@ Apiserver X509 management:
           IP Address:127.0.0.1,
           IP Address:{{ salt['grains.get']('k8s_salt:ip') }}{% if key == 'apiserver' %},
           IP Address:{{ k8s_salt['api_service_ip'] }},{% for ip in k8s_salt['api_extra_ips'] %}
-          IP Address:{{ ip }},{% endfor %}
+          IP Address:{{ ip }},{% endfor %}{% for dn in k8s_salt['api_extra_dns'] %}
+          DNS:{{ dn }},{% endfor %}
           DNS:kubernetes,
           DNS:kubernetes.default,
           DNS:kubernetes.default.svc,

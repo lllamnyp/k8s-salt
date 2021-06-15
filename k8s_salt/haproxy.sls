@@ -86,7 +86,7 @@ run_haproxy_service:
   - name: haproxy
   - enable: True
   - reload: True
-  - require:
+  - onchanges:
     - cmd: place_haproxy_configuration
 
 # TODO: later
