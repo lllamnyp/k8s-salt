@@ -41,6 +41,10 @@
 {% for k, v in dict.items() %}{{ prefix }}{{ v[attribute] }}{{ suffix }}{% if not loop.last %},{% endif %}{% endfor %}
 {%- endmacro %}
 
+{% macro map_comma_separated(attribute1, prefix, dict, attribute2, suffix) -%}
+{% for k, v in dict.items() %}{{ v[attribute1] }}{{ prefix }}{{ v[attribute2] }}{{ suffix }}{% if not loop.last %},{% endif %}{% endfor %}
+{%- endmacro %}
+
 {% do k8s_salt.update({'hostname_fqdn':salt['pillar.get']('k8s_overdata:host_info:'~id~':hostname_fqdn')}) %}
 {% do k8s_salt.update({'ip':salt['pillar.get']('k8s_overdata:host_info:'~id~':ip')}) %}
 
@@ -52,6 +56,7 @@
 # TODO: derive service ip from service cidr
 {% do k8s_salt.update({'dns_service_ip':salt['pillar.get']('k8s_salt:dns_service_ip') or '10.143.0.2'}) %}
 {% do k8s_salt.update({'api_extra_ips':salt['pillar.get']('k8s_salt:api_extra_ips') or []}) %}
+{% do k8s_salt.update({'api_extra_dns':salt['pillar.get']('k8s_salt:api_extra_dns') or []}) %}
 {% do k8s_salt.update({'cluster_domain':salt['pillar.get']('k8s_salt:cluster_domain') or 'cluster.local'}) %}
 {% do k8s_salt.update({'apiserver_balancer_url':salt['pillar.get']('k8s_salt:apiserver_balancer_url') or 'localhost'}) %}
 {% do k8s_salt.update({'apiserver_port':salt['pillar.get']('k8s_salt:apiserver_port') or '6443'}) %}
@@ -221,7 +226,7 @@
       'listen-client-urls':'https://0.0.0.0:2379',
       'advertise-client-urls':'https://' + k8s_salt['hostname_fqdn'] + ':2379',
       'initial-cluster-token':cluster,
-      'initial-cluster':comma_separated('https://', etcd_info, 'hostname_fqdn', ':2380'),
+      'initial-cluster':map_comma_separated('hostname_fqdn', '=https://', etcd_info, 'hostname_fqdn', ':2380'),
       'initial-cluster-state':'new',
       'logger':'zap',
       'data-dir':'/var/lib/etcd'
