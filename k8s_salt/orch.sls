@@ -31,9 +31,9 @@ Download k8s binaries:
         host_info: {{ host_info }}
         ca_server: {{ ca_server }}
 
-Python3 M2Crypto for signing certs:
+Python3 M2Crypto on the CA server:
   salt.state:
-  - tgt: 'I@k8s_salt:enabled:True'
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:ca:True'
   - tgt_type: compound
   - sls:
     - {{ slspath }}.m2crypto
@@ -65,32 +65,42 @@ Generate CA certs:
   - pillar: *pillar
   - require:
     - salt: Wait for ca reboot
-    - salt: Python3 M2Crypto for signing certs
+    - salt: Python3 M2Crypto on the CA server
 
-Distribute CA certs:
+{% for cluster in clusters %}
+Python3 M2Crypto on {{ cluster }} controlplane:
   salt.state:
-  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:cluster'
+  - tgt: 'I@k8s_salt:enabled:True and ( I@k8s_salt:roles:etcd:True or I@k8s_salt:roles:controlplane:True or I@k8s_salt:roles:admin:True ) and I@k8s_salt:cluster:{{ cluster }}'
+  - tgt_type: compound
+  - sls:
+    - {{ slspath }}.m2crypto
+
+Distribute CA certs to {{ cluster }} controlplane:
+  salt.state:
+  - tgt: 'I@k8s_salt:enabled:True and ( I@k8s_salt:roles:etcd:True or I@k8s_salt:roles:controlplane:True or I@k8s_salt:roles:admin:True ) and I@k8s_salt:cluster:{{ cluster }}'
   - tgt_type: compound
   - sls:
     - {{ slspath }}.distribute_cas
   - pillar: *pillar
   - require:
     - salt: Generate CA certs
+    - salt: Python3 M2Crypto on {{ cluster }} controlplane
 
-Build etcd clusters:
+Build etcd in {{ cluster }}:
   salt.state:
-  - tgt: 'I@k8s_salt:enabled:True and ( I@k8s_salt:roles:etcd:True or I@k8s_salt:roles:admin:True ) '
+  - tgt: 'I@k8s_salt:enabled:True and ( I@k8s_salt:roles:etcd:True or I@k8s_salt:roles:admin:True ) and I@k8s_salt:cluster:{{ cluster }}'
   - tgt_type: compound
   - sls:
     - {{ slspath }}.etcd
   - pillar: *pillar
   - require:
-    - salt: Distribute CA certs
+    - salt: Distribute CA certs to {{ cluster }} controlplane
     - cmd: Allow minions to request certs
+    - salt: Python3 M2Crypto on {{ cluster }} controlplane
 
-Run controlplane:
+Run {{ cluster }} controlplane:
   salt.state:
-  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:controlplane:True'
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:controlplane:True and I@k8s_salt:cluster:{{ cluster }}'
   - tgt_type: compound
   - sls:
     - {{ slspath }}.apiserver
@@ -98,23 +108,32 @@ Run controlplane:
     - {{ slspath }}.scheduler
   - pillar: *pillar
   - require:
-    - salt: Build etcd clusters
+    - salt: Build etcd in {{ cluster }}
     - cmd: Allow minions to request certs
+    - salt: Python3 M2Crypto on {{ cluster }} controlplane
 
-Start haproxies:
+Python3 M2Crypto on {{ cluster }} workers:
   salt.state:
-  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True'
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True and I@k8s_salt:cluster:{{ cluster }}'
+  - tgt_type: compound
+  - sls:
+    - {{ slspath }}.m2crypto
+
+Start {{ cluster }} haproxies:
+  salt.state:
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True and I@k8s_salt:cluster:{{ cluster }}'
   - tgt_type: compound
   - sls:
     - {{ slspath }}.haproxy
   - pillar: *pillar
   - require:
-    - salt: Run controlplane
+    - salt: Run {{ cluster }} controlplane
+    - salt: Python3 M2Crypto on {{ cluster }} workers
     - cmd: Allow minions to request certs
 
-Start workers:
+Start {{ cluster }} workers:
   salt.state:
-  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True'
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True and I@k8s_salt:cluster:{{ cluster }}'
   - tgt_type: compound
   - sls:
     - {{ slspath }}.cni
@@ -123,4 +142,6 @@ Start workers:
   - pillar: *pillar
   - require:
     - salt: Start haproxies
+    - salt: Python3 M2Crypto on {{ cluster }} workers
     - cmd: Allow minions to request certs
+{% endfor %}

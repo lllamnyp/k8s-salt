@@ -88,6 +88,13 @@ run_haproxy_service:
   - reload: True
   - onchanges:
     - cmd: place_haproxy_configuration
+  - check_cmd:
+# TODO: unhardcode port
+    - "curl https://localhost:6443 -k"
+  - retry:
+      attempts: 5
+      interval: 7
+      splay: 2
 
 # TODO: later
 # reload_rsyslog_service:
