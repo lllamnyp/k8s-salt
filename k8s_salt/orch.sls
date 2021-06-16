@@ -141,7 +141,7 @@ Start {{ cluster }} workers:
     - {{ slspath }}.proxy
   - pillar: *pillar
   - require:
-    - salt: Start haproxies
+    - salt: Start {{ cluster }} haproxies
     - salt: Python3 M2Crypto on {{ cluster }} workers
     - cmd: Allow minions to request certs
 {% endfor %}
