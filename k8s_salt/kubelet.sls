@@ -15,6 +15,7 @@ Kubelet private key:
 
 place_kubelet_config:
   file.serialize:
+  - makedirs: True
   - name: /etc/kubernetes/config/kubelet-config.yaml
   - dataset: {{ k8s_salt['kubelet']['config'] | yaml }}
   - formatter: yaml

@@ -15,6 +15,7 @@ Proxy private key:
 
 place_kubeproxy_config:
   file.serialize:
+  - makedirs: True
   - name: /etc/kubernetes/config/kube-proxy-config.yaml
   - dataset: {{ k8s_salt['kube-proxy']['config'] | yaml }}
   - formatter: yaml

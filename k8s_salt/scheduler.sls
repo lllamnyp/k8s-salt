@@ -16,6 +16,7 @@ Scheduler private key:
 
 place_scheduler_config:
   file.serialize:
+  - makedirs: True
   - name: /etc/kubernetes/config/kube-scheduler-config.yaml
   - dataset: {{ k8s_salt['kube-scheduler']['config'] | yaml }}
   - formatter: yaml
