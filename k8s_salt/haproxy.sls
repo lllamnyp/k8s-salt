@@ -90,10 +90,11 @@ run_haproxy_service:
     - cmd: place_haproxy_configuration
   - check_cmd:
 # TODO: unhardcode port
-    - "curl https://localhost:6443 -k"
+# TODO: correct approach could be done better
+    - "curl https://localhost:6443 -k || ( systemctl reload haproxy && sleep 3 && curl https://localhost:6443 -k )"
   - retry:
       attempts: 5
-      interval: 7
+      interval: 5
       splay: 2
 
 # TODO: later
