@@ -52,7 +52,7 @@ Etcd X509 management:
   - names:
   {% for key in keys %}
     - /etc/kubernetes/pki/{{ key }}.pem:
-      - CN: {{ salt['grains.get']('k8s_salt:hostname_fqdn') }}
+      - CN: {{ k8s_salt['hostname_fqdn'] }}
       - ca_server: {{ k8s_salt['ca_server'] }}
       - public_key: /etc/kubernetes/pki/{{ key }}-key.pem
       - signing_policy: {{ cluster }}_{{ key }}-ca
@@ -61,9 +61,9 @@ Etcd X509 management:
       - basicConstraints: "critical CA:FALSE"
       - subjectAltName: >-
           DNS:localhost,
-          DNS:{{ salt['grains.get']('k8s_salt:hostname_fqdn') }},
+          DNS:{{ k8s_salt['hostname_fqdn'] }},
           IP Address:127.0.0.1,
-          IP Address:{{ salt['grains.get']('k8s_salt:ip') }}
+          IP Address:{{ k8s_salt['ip'] }}
   {% endfor %}
 
   {% if salt['pillar.get']('k8s_salt:roles:etcd') %}
