@@ -3,7 +3,7 @@
 # TODO: needs validity checks (if k8s_salt is defined, etc)
 
 {% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
-{% if salt['pillar.get']('k8s_salt:roles:worker') and not salt['pillar.get']('k8s_salt:roles:controlplane')  %}
+{% if ( salt['pillar.get']('k8s_salt:roles:worker') or salt['pillar.get']('k8s_salt:roles:admin') ) and not salt['pillar.get']('k8s_salt:roles:controlplane')  %}
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 # TODO: look for alternatives for rpm-based systems
 # TODO: try non-root?
