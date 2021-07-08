@@ -121,7 +121,7 @@ Python3 M2Crypto on {{ cluster }} workers:
 
 Start {{ cluster }} haproxies:
   salt.state:
-  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True and I@k8s_salt:cluster:{{ cluster }}'
+  - tgt: 'I@k8s_salt:enabled:True and ( I@k8s_salt:roles:worker:True or I@k8s_salt:roles:admin:True ) and I@k8s_salt:cluster:{{ cluster }}'
   - tgt_type: compound
   - sls:
     - {{ slspath }}.haproxy
@@ -129,6 +129,19 @@ Start {{ cluster }} haproxies:
   - require:
     - salt: Run {{ cluster }} controlplane
     - salt: Python3 M2Crypto on {{ cluster }} workers
+    - cmd: Allow minions to request certs
+
+Start {{ cluster }} adminbox:
+  salt.state:
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:admin:True and I@k8s_salt:cluster:{{ cluster }}'
+  - tgt_type: compound
+  - sls:
+    - {{ slspath }}.admin
+  - pillar: *pillar
+  - require:
+    - salt: Start {{ cluster }} haproxies
+    - salt: Run {{ cluster }} controlplane
+    - salt: Python3 M2Crypto on {{ cluster }} controlplane
     - cmd: Allow minions to request certs
 
 Start {{ cluster }} workers:
