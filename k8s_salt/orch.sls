@@ -119,6 +119,17 @@ Python3 M2Crypto on {{ cluster }} workers:
   - sls:
     - {{ slspath }}.m2crypto
 
+Distribute CA certs to {{ cluster }} workers:
+  salt.state:
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True and I@k8s_salt:cluster:{{ cluster }}'
+  - tgt_type: compound
+  - sls:
+    - {{ slspath }}.distribute_cas
+  - pillar: *pillar
+  - require:
+    - salt: Generate CA certs
+    - salt: Python3 M2Crypto on {{ cluster }} workers
+
 Start {{ cluster }} haproxies:
   salt.state:
   - tgt: 'I@k8s_salt:enabled:True and ( I@k8s_salt:roles:worker:True or I@k8s_salt:roles:admin:True ) and I@k8s_salt:cluster:{{ cluster }}'
