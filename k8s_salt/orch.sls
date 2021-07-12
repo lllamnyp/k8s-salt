@@ -156,7 +156,7 @@ Start {{ cluster }} adminbox:
     - cmd: Allow minions to request certs
 
 Deploy {{ cluster }} manifests:
-  salt.stage:
+  salt.state:
   - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:admin:True and I@k8s_salt:cluster:{{ cluster }}'
   - tgt_type: compound
   - sls:
