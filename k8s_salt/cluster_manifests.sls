@@ -1,9 +1,5 @@
 {% from './map.jinja' import k8s_salt %}
 
-Noop if not admin:
-  test.nop:
-  - arg: value
-
 {% if salt['pillar.get']('k8s_salt:roles:admin') %}
 
 Place cluster manifests:
