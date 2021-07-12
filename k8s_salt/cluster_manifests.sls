@@ -16,7 +16,7 @@ Place cluster manifests:
       - source: salt://{{ slspath }}/cluster-wide-manifests/kubelet-access.yml
   cmd.run:
   - names:
-    - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/':
+    - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/'
 #       - onchanges:
 #         - file: Place cluster manifests
 
