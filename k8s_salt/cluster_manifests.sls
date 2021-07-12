@@ -9,6 +9,7 @@ Place cluster manifests:
   - template: 'jinja'
   - defaults:
       k8s_salt: {{ k8s_salt }}
+      cluster: {{ pillar.k8s_salt.cluster }}
   - names:
     - /etc/kubernetes/cluster-wide-manifests/cilium.yml:
       - source: salt://{{ slspath }}/cluster-wide-manifests/cilium.yml
