@@ -483,8 +483,9 @@ spec:
         - name: KUBERNETES_SERVICE_HOST
           value: "127.0.0.1"
         - name: KUBERNETES_SERVICE_PORT
+          # TODO: ensure correct links between haproxy port and this port
           value: "{{ k8s_salt['apiserver_port'] }}"
-        image: "quay.io/cilium/cilium:v1.10.0-rc1"
+        image: "quay.io/cilium/cilium:v1.10.2"
         imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
@@ -553,6 +554,7 @@ spec:
         - name: KUBERNETES_SERVICE_HOST
           value: "127.0.0.1"
         - name: KUBERNETES_SERVICE_PORT
+          # TODO: see todo above
           value: "{{ k8s_salt['apiserver_port'] }}"
         image: "quay.io/cilium/cilium:v1.10.0-rc1"
         imagePullPolicy: IfNotPresent
@@ -705,6 +707,7 @@ spec:
         - name: KUBERNETES_SERVICE_HOST
           value: "127.0.0.1"
         - name: KUBERNETES_SERVICE_PORT
+          # TODO: see above
           value: "{{ k8s_salt['apiserver_port'] }}"
         image: "quay.io/cilium/operator-generic:v1.10.0-rc1"
         imagePullPolicy: IfNotPresent
