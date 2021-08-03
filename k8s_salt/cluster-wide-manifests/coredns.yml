@@ -10,7 +10,7 @@ data:
           fallthrough
         }
         prometheus :9153
-        forward . /etc/resolv.conf
+        forward .{% for host in k8s_salt['upstream_dns'] %} {{ host }}{% endfor %}
         cache 5
         loop
         reload
@@ -179,4 +179,9 @@ subjects:
 - kind: ServiceAccount
   name: kube-dns
   namespace: kube-system
-
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-dns
+  namespace: kube-system
