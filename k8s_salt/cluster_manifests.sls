@@ -11,6 +11,8 @@ Place cluster manifests:
       k8s_salt: {{ k8s_salt }}
       cluster: {{ pillar.k8s_salt.cluster }}
   - names:
+    - /etc/kubernetes/cluster-wide-manifests/coredns.yml:
+      - source: salt://{{ slspath }}/cluster-wide-manifests/coredns.yml
     - /etc/kubernetes/cluster-wide-manifests/cilium.yml:
       - source: salt://{{ slspath }}/cluster-wide-manifests/cilium.yml
     - /etc/kubernetes/cluster-wide-manifests/kubelet-access.yml:
