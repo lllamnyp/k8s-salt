@@ -55,7 +55,7 @@
 {% do k8s_salt.update({'api_service_ip':salt['pillar.get']('k8s_salt:api_service_ip') or '10.143.0.1'}) %}
 # TODO: derive service ip from service cidr
 {% do k8s_salt.update({'dns_service_ip':salt['pillar.get']('k8s_salt:dns_service_ip') or '10.143.0.2'}) %}
-{% do k8s_salt.update({'upstream_dns':salt['pillar.get']('k8s_salt:dns_service_ip') or ['/etc/resolv.conf']}) %}
+{% do k8s_salt.update({'upstream_dns':salt['pillar.get']('k8s_salt:upstream_dns') or ['/etc/resolv.conf']}) %}
 {% do k8s_salt.update({'api_extra_ips':salt['pillar.get']('k8s_salt:api_extra_ips') or []}) %}
 {% do k8s_salt.update({'api_extra_dns':salt['pillar.get']('k8s_salt:api_extra_dns') or []}) %}
 {% do k8s_salt.update({'cluster_domain':salt['pillar.get']('k8s_salt:cluster_domain') or 'cluster.local'}) %}
