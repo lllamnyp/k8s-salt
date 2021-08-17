@@ -278,7 +278,9 @@
 {% do binaries.append('kube-controller-manager') %}
 {% endif %}
 {% if salt['pillar.get']('k8s_salt:roles:worker') %}
+{% if not k8s_salt['kube-proxy'].get('disabled', False) %}
 {% do binaries.append('kube-proxy') %}
+{% endif %}
 {% do binaries.append('kubelet') %}
 {% endif %}
 {% if salt['pillar.get']('k8s_salt:roles:admin') %}

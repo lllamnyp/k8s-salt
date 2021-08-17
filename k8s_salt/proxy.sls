@@ -1,7 +1,7 @@
 {% from './map.jinja' import k8s_salt %}
 
 {% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
-{% if salt['pillar.get']('k8s_salt:roles:worker') and k8s_salt['kube-proxy'].get('run', True) %}
+{% if salt['pillar.get']('k8s_salt:roles:worker') and not k8s_salt['kube-proxy'].get('disabled', False) %}
 
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 # TODO: factor out private key into macro
@@ -71,5 +71,10 @@ run_kubeproxy_unit:
   - enable: True
   - watch:
     - module: reload_kubeproxy_service
+{% else %}
+Dont run kubeproxy:
+  service.dead:
+  - name: kube-proxy
+  - enable: False
 {% endif %}
 {% endif %}
