@@ -13,8 +13,10 @@ Place cluster manifests:
   - names:
     - /etc/kubernetes/cluster-wide-manifests/coredns.yml:
       - source: salt://{{ slspath }}/cluster-wide-manifests/coredns.yml
+{% if k8s_salt['addons'].get('cilium', {}).get('enabled', False) %}
     - /etc/kubernetes/cluster-wide-manifests/cilium.yml:
       - source: salt://{{ slspath }}/cluster-wide-manifests/cilium.yml
+{% endif %}
     - /etc/kubernetes/cluster-wide-manifests/kubelet-access.yml:
       - source: salt://{{ slspath }}/cluster-wide-manifests/kubelet-access.yml
   cmd.run:
