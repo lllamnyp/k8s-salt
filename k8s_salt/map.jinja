@@ -242,6 +242,9 @@
   {% endif %}
 {% endfor %}
 
+{% set addons = salt['pillar.get']('k8s_salt').get('addons', {}) %}
+{% do k8s_salt.update({'addons':addons}) %}
+
 {% do k8s_salt.update({'arch':salt['pillar.get']('k8s_salt:arch') or salt['grains.get']('osarch') or 'amd64'}) %}
 {% do k8s_salt.update({'cas':['kube-ca','etcd-peer-ca','etcd-trusted-ca','requestheader-ca']}) %}
 
