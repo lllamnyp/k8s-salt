@@ -1,0 +1,105 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-salt
+  labels:
+    app.kubernetes.io/managed-by: k8s-salt
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-roles
+  namespace: k8s-salt
+  labels:
+    app.kubernetes.io/managed-by: k8s-salt
+    app.kubernetes.io/name: node-roles
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-roles
+  labels:
+    app.kubernetes.io/managed-by: k8s-salt
+    app.kubernetes.io/name: node-roles
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-roles
+  labels:
+    app.kubernetes.io/managed-by: k8s-salt
+    app.kubernetes.io/name: node-roles
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: node-roles
+subjects:
+- kind: ServiceAccount
+  name: node-roles
+  namespace: k8s-salt
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-roles
+  namespace: k8s-salt
+  labels:
+    app.kubernetes.io/managed-by: k8s-salt
+    app.kubernetes.io/name: node-roles
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: k8s-salt
+      app.kubernetes.io/name: node-roles
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: k8s-salt
+        app.kubernetes.io/name: node-roles
+    spec:
+      hostNetwork: true
+      serviceAccount: node-roles
+      serviceAccountName: node-roles
+      tolerations:
+      - operator: Exists
+      volumes:
+      - hostPath:
+          path: /etc/kubernetes/roles
+          type: DirectoryOrCreate
+        name: roles
+      containers:
+      - name: node-roles
+        image: curlimages/curl
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        command:
+        - sh
+        # TODO: template apiserver port
+        args:
+        - -c
+        - |-
+          while true ;
+          do 
+            curl https://127.0.0.1:6443/api/v1/nodes/${NODE_NAME} -XPATCH -sS --output /dev/null \
+              -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+              --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              --data @/etc/kubernetes/roles/roles.json \
+              -H "Content-Type: application/merge-patch+json" ;
+            sleep 60 ;
+          done
+        volumeMounts:
+        - mountPath: /etc/kubernetes/roles
+          name: roles
