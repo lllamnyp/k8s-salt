@@ -1,0 +1,7 @@
+{# vi: set ft=sls : -#}
+{"metadata":{"labels":{
+{%- for k, v in pillar.k8s_salt.roles.items() -%}
+"node-role.kubernetes.io/{{ k }}":{% if v %}""{% else %}null{% endif %}
+{%- if not loop.last %},{% endif -%}
+{%- endfor -%}
+{{ "}}}" }}
