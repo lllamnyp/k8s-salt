@@ -6,7 +6,7 @@ Create file with roles:
     - /etc/kubernetes/roles/roles.json:
       - source: salt://{{ slspath }}/templates/roles.json
 
-{% if salt['pillar.get']('k8s_salt:roles:admin') %}
+{% if salt['pillar.get']('k8s_salt:roles:admin') and salt['pillar.get']('k8s_salt:set_node_roles', True) %}
 Deploy node-role daemon:
   file.managed:
   - makedirs: True
