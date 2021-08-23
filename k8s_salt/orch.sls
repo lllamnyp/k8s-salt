@@ -155,6 +155,15 @@ Start {{ cluster }} adminbox:
     - salt: Python3 M2Crypto on {{ cluster }} controlplane
     - cmd: Allow minions to request certs
 
+Assign roles to {{ cluster }} nodes:
+  salt.state:
+  - tgt: 'I@k8s_salt:enabled:True and ( I@k8s_salt:roles:admin:True or I@k8s_salt:roles:worker:True ) and I@k8s_salt:cluster:{{ cluster }}'
+  - tgt_type: compound
+  - sls:
+    - {{ slspath }}.noderoles
+  - require:
+    - salt: Start {{ cluster }} adminbox
+
 Deploy {{ cluster }} manifests:
   salt.state:
   - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:admin:True and I@k8s_salt:cluster:{{ cluster }}'
