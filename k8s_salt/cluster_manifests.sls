@@ -21,7 +21,11 @@ Place cluster manifests:
       - source: salt://{{ slspath }}/cluster-wide-manifests/kubelet-access.yml
   cmd.run:
   - names:
-    - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/'
+    - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/coredns.yml'
+    - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/kubelet-access.yml'
+{% if k8s_salt['addons'].get('cilium', {}).get('enabled', False) %}
+    - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/cilium.yml'
+{% endif %}
 #       - onchanges:
 #         - file: Place cluster manifests
 
