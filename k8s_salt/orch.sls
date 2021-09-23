@@ -132,6 +132,7 @@ Distribute CA certs to {{ cluster }} workers:
 
 Start {{ cluster }} haproxies:
   salt.state:
+    # TODO: what if the list of targets is empty? e.g. no workers
   - tgt: 'I@k8s_salt:enabled:True and ( I@k8s_salt:roles:worker:True or I@k8s_salt:roles:admin:True ) and I@k8s_salt:cluster:{{ cluster }}'
   - tgt_type: compound
   - sls:

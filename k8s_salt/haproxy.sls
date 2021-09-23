@@ -1,5 +1,7 @@
 {% from './map.jinja' import k8s_salt %}
 
+Noop if this is a controlplane node:
+  test.nop
 # TODO: needs validity checks (if k8s_salt is defined, etc)
 
 {% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
