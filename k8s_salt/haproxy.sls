@@ -7,34 +7,36 @@ Noop if this is a controlplane node:
 {% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
 {% if ( salt['pillar.get']('k8s_salt:roles:worker') or salt['pillar.get']('k8s_salt:roles:admin') ) and not salt['pillar.get']('k8s_salt:roles:controlplane')  %}
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-# TODO: look for alternatives for rpm-based systems
-# TODO: try non-root?
-add_trusted_haproxy_repo:
-  file.managed:
-  - name: /etc/apt/sources.list.d/haproxy.list
-  - user: root
-  - group: root
-  - mode: 644
-  - contents: |
-      deb [trusted=yes] http://ppa.launchpad.net/vbernat/haproxy-2.3/ubuntu bionic main
+add_haproxy_repo:
+  pkgrepo.managed:
+    - humanname: HAProxy
+{% if grains['os'] == 'Ubuntu' %}
+    - name: deb https://www.haproxy.com/download/haproxy/haproxy/ubuntu-{{ grains['oscodename'] }}/ {{ grains['oscodename'] }} main
+    - dist: {{ grains['oscodename'] }}
+    - file: /etc/apt/sources.list.d/haproxy.list
+    - gpgcheck: 1
+    - key_url: https://www.haproxy.com/download/haproxy/HAPROXY-key-community.asc
+{% else %}
+  # TODO: print error about unimplemented for your grains['os'], welcome for PR.
+{% endif %}
 
 update_haproxy_repo:
   cmd.wait:
   - name: apt-get update > /dev/null || true
-  - watch:
-    - file: add_trusted_haproxy_repo
+  - require:
+    - pkgrepo: add_haproxy_repo
 
 install_haproxy_package:
   pkg.installed:
   - name: haproxy
   - pkgs:
-    - haproxy: '2.*'
+    - haproxy: '2.3.*'
   - hold: True
   - refresh: True
   - cache_valid_time: 86400 # 1 day
-  - version: '2.*'
+  - version: '2.3.*'
   - require:
-    - file: add_trusted_haproxy_repo
+    - file: add_haproxy_repo
     - cmd: update_haproxy_repo
 
 Healthchecker private key:
