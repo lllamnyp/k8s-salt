@@ -100,10 +100,6 @@ k8s_salt:
   # effective default: as shown
   container_runtime_endpoint: unix:///var/run/containerd/containerd.sock
 
-  # Proxy repo for etcd when in air-gapped environment
-  # (optional)
-  etcd_proxy_repo: https://artifactory.example.com/etcd-proxy-repo
-
   # Override autodetected hostname. Doubles as the nodename of workers.
   # (optional)
   hostname_fqdn: node01.k8s.example.com
@@ -113,9 +109,21 @@ k8s_salt:
   # effective default: as shown
   ipv6: False
 
-  # Proxy repo for k8s when in air-gapped environment
+  # Proxy repo when k8s in air-gapped environment
   # (optional)
-  k8s_proxy_repo: https://artifactory.example.com/etcd-proxy-repo
+  k8s_proxy_repo: https://artifactory.example.com/k8s-proxy-repo
+
+  # Proxy repo when etcd in air-gapped environment
+  # (optional)
+  etcd_proxy_repo: https://artifactory.example.com/etcd-proxy-repo
+
+  # Proxy repo when cni in air-gapped environment
+  # (optional)
+  cni_proxy_repo: https://artifactory.example.com/cni-proxy-repo
+
+  # Proxy repo when haproxy in air-gapped environment
+  # (optional)
+  haproxy_proxy_repo: https://artifactory.example.com/haproxy-proxy-repo
 
   # Preferred network interface for autodetection of hostname and ip
   # (optional)
