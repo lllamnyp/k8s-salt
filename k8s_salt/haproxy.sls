@@ -11,7 +11,7 @@ add_haproxy_repo:
   pkgrepo.managed:
     - humanname: HAProxy
 {% if grains['os'] == 'Ubuntu' %}
-    - name: deb https://www.haproxy.com/download/haproxy/haproxy/ubuntu-{{ grains['oscodename'] }}/ {{ grains['oscodename'] }} main
+    - name: deb {{ k8s_salt['haproxy_proxy_repo'] }}/ubuntu-{{ grains['oscodename'] }}/ {{ grains['oscodename'] }} main
     - dist: {{ grains['oscodename'] }}
     - file: /etc/apt/sources.list.d/haproxy.list
     - gpgcheck: 1
