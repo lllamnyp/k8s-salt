@@ -20,12 +20,6 @@ add_haproxy_repo:
     - text:  Unimplemented for your OS {{ grains['os'] }}, welcome for PR.
 {% endif %}
 
-update_haproxy_repo:
-  cmd.wait:
-  - name: apt-get update > /dev/null || true
-  - require:
-    - pkgrepo: add_haproxy_repo
-
 install_haproxy_package:
   pkg.installed:
   - name: haproxy
@@ -36,8 +30,7 @@ install_haproxy_package:
   - cache_valid_time: 86400 # 1 day
   - version: '2.3.*'
   - require:
-    - file: add_haproxy_repo
-    - cmd: update_haproxy_repo
+    - add_haproxy_repo
 
 Healthchecker private key:
   x509.private_key_managed:
