@@ -63,14 +63,14 @@
     {% if 'network_interface' in server_pillars[k]['k8s_salt'] %}
       {% do host_info[k].update({'network_interface':server_pillars[k]['k8s_salt']['network_interface']}) %}
       {% do host_info[k].update({'ip':server_grains[k]['ip6_interfaces'][host_info[k]['network_interface']] | first}) %}
-    {% else %} 
+    {% else %}
       {% do host_info[k].update({'ip':server_grains[k]['fqdn_ip6'] | first}) %}
     {% endif %}
   {% else %}
     {% if 'network_interface' in server_pillars[k]['k8s_salt'] %}
       {% do host_info[k].update({'network_interface':server_pillars[k]['k8s_salt']['network_interface']}) %}
       {% do host_info[k].update({'ip':server_grains[k]['ip4_interfaces'][host_info[k]['network_interface']] | first}) %}
-    {% else %} 
+    {% else %}
       {% do host_info[k].update({'ip':server_grains[k]['fqdn_ip4'] | first}) %}
     {% endif %}
   {% endif %}
