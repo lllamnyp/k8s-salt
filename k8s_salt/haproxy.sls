@@ -8,15 +8,16 @@ Noop if this is a controlplane node:
 {% if ( salt['pillar.get']('k8s_salt:roles:worker') or salt['pillar.get']('k8s_salt:roles:admin') ) and not salt['pillar.get']('k8s_salt:roles:controlplane')  %}
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
 add_haproxy_repo:
+{% if grains['os_family'] == 'Debian' %}
   pkgrepo.managed:
     - humanname: HAProxy
-{% if grains['os_family'] == 'Debian' %}
-    - name: deb {{ k8s_salt['haproxy_proxy_repo'] }}/{{ grains['os'] }}-{{ grains['oscodename'] }}/ {{ grains['oscodename'] }} main
-    - dist: {{ grains['oscodename'] }}
+    - name: deb {{ k8s_salt['haproxy_proxy_repo'] }}/{{ grains['os']|lower }}-{{ grains['oscodename']|lower }}/ {{ grains['oscodename']|lower }} main
+    - dist: {{ grains['oscodename']|lower }}
     - gpgcheck: 1
     - key_url: https://www.haproxy.com/download/haproxy/HAPROXY-key-community.asc
 {% else %}
-  # TODO: print error about unimplemented for your grains['os'], welcome for PR.
+  test.show_notification:
+    - text:  Unimplemented for your OS {{ grains['os'] }}, welcome for PR.
 {% endif %}
 
 update_haproxy_repo:
