@@ -1,0 +1,14 @@
+---
+exclude_paths: []
+skip_list:
+  - 205 # Use ".sls" as a Salt State file extension
+tags: []
+verbosity: 1
+rules:
+  204: # Lines should be no longer that 160 chars
+    ignore: |
+      ./k8s_salt/haproxy.sls
+      ./k8s_salt/haproxy.sls
+      ./k8s_salt/map.jinja
+      ./k8s_salt/orch.sls
+severity: True
