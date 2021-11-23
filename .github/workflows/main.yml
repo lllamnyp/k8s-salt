@@ -3,7 +3,7 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Salt Lint Action Demo
+    name: Salt-Lint Action
     steps:
     - uses: actions/checkout@v1
     - name: Run salt-lint
