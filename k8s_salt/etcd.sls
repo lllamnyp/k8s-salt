@@ -8,7 +8,7 @@ get_etcd_archive:
   - source: {{ k8s_salt['etcd_proxy_repo'] }}/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}.tar.gz
   - source_hash: {{ k8s_salt['etcd_proxy_repo'] }}/{{ k8s_salt['version_etcd'] }}/SHA256SUMS
   - user: root
-  - mode: 644
+  - mode: '0644'
   - makedirs: True
 
 unpack_etcd_archive:
@@ -71,7 +71,7 @@ place_etcd_service:
   file.managed:
   - name: /etc/systemd/system/etcd.service
   - source: salt://{{ slspath }}/templates/etcd.service
-  - mode: 644
+  - mode: '0644'
   - template: jinja
   - defaults:
       k8s_salt: {{ k8s_salt }}

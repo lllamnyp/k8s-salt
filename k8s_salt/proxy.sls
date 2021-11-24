@@ -47,7 +47,7 @@ place_kubeproxy_service:
   file.managed:
   - name: /etc/systemd/system/kube-proxy.service
   - source: salt://{{ slspath }}/templates/component.service
-  - mode: 644
+  - mode: '0644'
   - template: jinja
   - defaults:
       k8s_salt: {{ k8s_salt }}

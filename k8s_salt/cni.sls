@@ -6,7 +6,7 @@ get_cni_archive:
   - source: {{ k8s_salt['cni_proxy_repo'] }}/{{ k8s_salt['version_cni'] }}/cni-plugins-linux-{{ k8s_salt['arch'] }}-{{ k8s_salt['version_cni'] }}.tgz
   - source_hash: {{ k8s_salt['cni_proxy_repo'] }}/{{ k8s_salt['version_cni'] }}/cni-plugins-linux-{{ k8s_salt['arch'] }}-{{ k8s_salt['version_cni'] }}.tgz.sha256
   - user: root
-  - mode: 644
+  - mode: '0644'
   - makedirs: True
 
 unpack_cni_archive:

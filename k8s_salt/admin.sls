@@ -15,7 +15,7 @@ Place admin kubeconfig:
       - template: 'jinja'
       - defaults:
           k8s_salt: {{ k8s_salt }}
-  
+
 Kubeadmin private key:
   x509.private_key_managed:
   - replace: False
