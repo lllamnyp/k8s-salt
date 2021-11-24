@@ -113,13 +113,25 @@ k8s_salt:
   # (optional)
   k8s_proxy_repo: https://artifactory.example.com/k8s-proxy-repo
 
+  # Ignore checksum for k8s binaries. Useful for self-made distributions.
+  # (optional)
+  k8s_binaries_ignore_distib_checksum: False
+
   # Proxy repo when etcd in air-gapped environment
   # (optional)
   etcd_proxy_repo: https://artifactory.example.com/etcd-proxy-repo
 
+  # Ignore checksum for etcd. Useful for self-made distributions.
+  # (optional)
+  ectd_ignore_distib_checksum: False
+
   # Proxy repo when cni in air-gapped environment
   # (optional)
   cni_proxy_repo: https://artifactory.example.com/cni-proxy-repo
+
+  # Ignore checksum for CNI. Useful for self-made distributions.
+  # (optional)
+  cni_ignore_distib_checksum: False
 
   # Proxy repo when haproxy in air-gapped environment
   # (optional)

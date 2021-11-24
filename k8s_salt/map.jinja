@@ -274,6 +274,11 @@
 {% do k8s_salt.update({'cni_proxy_repo':salt['pillar.get']('k8s_salt:cni_proxy_repo') or 'https://github.com/containernetworking/plugins/releases/download'}) %}
 {% do k8s_salt.update({'haproxy_proxy_repo':salt['pillar.get']('k8s_salt:haproxy_proxy_repo') or 'https://www.haproxy.com/download/haproxy/haproxy'}) %}
 
+# Ignore checksum (if necessary)
+{% do k8s_salt.update({'k8s_binaries_ignore_distib_checksum':salt['pillar.get']('k8s_salt:k8s_binaries_ignore_distib_checksum') or False}) %}
+{% do k8s_salt.update({'cni_ignore_distib_checksum':salt['pillar.get']('k8s_salt:cni_ignore_distib_checksum') or False}) %}
+{% do k8s_salt.update({'etcd_ignore_distib_checksum':salt['pillar.get']('k8s_salt:etcd_ignore_distib_checksum') or False}) %}
+
 # K8s binaries
 {% set binaries = [] %}
 {% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
