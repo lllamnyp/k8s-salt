@@ -7,6 +7,14 @@ Noop if this is a controlplane node:
 {% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
 {% if ( salt['pillar.get']('k8s_salt:roles:worker') or salt['pillar.get']('k8s_salt:roles:admin') ) and not salt['pillar.get']('k8s_salt:roles:controlplane')  %}
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
+
+{% if grains['os_family'] == 'Debian' %}
+add_haproxy_repo_key:
+  cmd.run:
+    - name: wget -O - {{ k8s_salt['haproxy_proxy_repo_key_url'] }} | apt-key add -
+    - unless: apt-key list | grep 'HAProxy'
+{% endif %}
+
 add_haproxy_repo:
 {% if grains['os_family'] == 'Debian' %}
   pkgrepo.managed:
@@ -15,6 +23,8 @@ add_haproxy_repo:
     - dist: {{ grains['oscodename']|lower }}
     - gpgcheck: 1
     - key_url: {{ k8s_salt['haproxy_proxy_repo_key_url'] }}
+    - require:
+      - cmd: add_haproxy_repo_key
 {% else %}
   test.show_notification:
     - text:  Unimplemented for your OS {{ grains['os'] }}, welcome for PR.
