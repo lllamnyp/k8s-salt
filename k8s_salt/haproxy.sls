@@ -14,7 +14,7 @@ add_haproxy_repo:
     - name: deb {{ k8s_salt['haproxy_proxy_repo'] }}/{{ grains['os']|lower }}-{{ grains['oscodename']|lower }}/ {{ grains['oscodename']|lower }} main
     - dist: {{ grains['oscodename']|lower }}
     - gpgcheck: 1
-    - key_url: https://www.haproxy.com/download/haproxy/HAPROXY-key-community.asc
+    - key_url: {{ k8s_salt['haproxy_proxy_repo_key_url'] }}
 {% else %}
   test.show_notification:
     - text:  Unimplemented for your OS {{ grains['os'] }}, welcome for PR.

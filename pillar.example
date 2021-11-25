@@ -125,6 +125,10 @@ k8s_salt:
   # (optional)
   haproxy_proxy_repo: https://artifactory.example.com/haproxy-proxy-repo
 
+  # HAProxy repo public key
+  # (optional)
+  haproxy_proxy_repo_key_url: https://www.haproxy.com/download/haproxy/HAPROXY-key-community.asc
+
   # Preferred network interface for autodetection of hostname and ip
   # (optional)
   network_interface: wlan0

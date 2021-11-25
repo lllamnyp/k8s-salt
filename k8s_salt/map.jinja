@@ -273,6 +273,7 @@
 {% do k8s_salt.update({'etcd_proxy_repo':salt['pillar.get']('k8s_salt:etcd_proxy_repo') or 'https://github.com/etcd-io/etcd/releases/download'}) %}
 {% do k8s_salt.update({'cni_proxy_repo':salt['pillar.get']('k8s_salt:cni_proxy_repo') or 'https://github.com/containernetworking/plugins/releases/download'}) %}
 {% do k8s_salt.update({'haproxy_proxy_repo':salt['pillar.get']('k8s_salt:haproxy_proxy_repo') or 'https://www.haproxy.com/download/haproxy/haproxy'}) %}
+{% do k8s_salt.update({'haproxy_proxy_repo_key_url':salt['pillar.get']('k8s_salt:haproxy_proxy_repo_key_url') or 'https://www.haproxy.com/download/haproxy/haproxy'}) %}
 
 # K8s binaries
 {% set binaries = [] %}
