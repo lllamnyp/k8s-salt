@@ -7,23 +7,28 @@ Noop if this is a controlplane node:
 {% if ('hostname_fqdn' in k8s_salt) and ('ca_server' in k8s_salt) %}
 {% if ( salt['pillar.get']('k8s_salt:roles:worker') or salt['pillar.get']('k8s_salt:roles:admin') ) and not salt['pillar.get']('k8s_salt:roles:controlplane')  %}
   {% set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-add_haproxy_repo:
-  pkgrepo.managed:
-    - humanname: HAProxy
+
 {% if grains['os_family'] == 'Debian' %}
-    - name: deb {{ k8s_salt['haproxy_proxy_repo'] }}/{{ grains['os'] }}-{{ grains['oscodename'] }}/ {{ grains['oscodename'] }} main
-    - dist: {{ grains['oscodename'] }}
-    - gpgcheck: 1
-    - key_url: https://www.haproxy.com/download/haproxy/HAPROXY-key-community.asc
-{% else %}
-  # TODO: print error about unimplemented for your grains['os'], welcome for PR.
+add_haproxy_repo_key:
+  cmd.run:
+    - name: wget -O - {{ k8s_salt['haproxy_proxy_repo'] }}/HAPROXY-key-community.asc | apt-key add -
+    - unless: apt-key list | grep 'HAProxy'
 {% endif %}
 
-update_haproxy_repo:
-  cmd.wait:
-  - name: apt-get update > /dev/null || true
-  - require:
-    - pkgrepo: add_haproxy_repo
+add_haproxy_repo:
+{% if grains['os_family'] == 'Debian' %}
+  pkgrepo.managed:
+    - humanname: HAProxy
+    - name: deb {{ k8s_salt['haproxy_proxy_repo'] }}/haproxy/{{ grains['os']|lower }}-{{ grains['oscodename']|lower }}/ {{ grains['oscodename']|lower }} main
+    - dist: {{ grains['oscodename']|lower }}
+    - gpgcheck: 1
+    - key_url: {{ k8s_salt['haproxy_proxy_repo'] }}/HAPROXY-key-community.asc
+    - require:
+      - cmd: add_haproxy_repo_key
+{% else %}
+  test.show_notification:
+    - text:  Unimplemented for your OS {{ grains['os'] }}, welcome for PR.
+{% endif %}
 
 install_haproxy_package:
   pkg.installed:
@@ -35,8 +40,7 @@ install_haproxy_package:
   - cache_valid_time: 86400 # 1 day
   - version: '2.3.*'
   - require:
-    - file: add_haproxy_repo
-    - cmd: update_haproxy_repo
+    - add_haproxy_repo
 
 Healthchecker private key:
   x509.private_key_managed:
