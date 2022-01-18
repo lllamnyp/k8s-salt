@@ -11,18 +11,18 @@ Noop if this is a controlplane node:
 {% if grains['os_family'] == 'Debian' %}
 add_haproxy_repo_key:
   cmd.run:
-    - name: wget -O - {{ k8s_salt['haproxy_proxy_repo'] }}/HAPROXY-key-community.asc | apt-key add -
-    - unless: apt-key list | grep 'HAProxy'
+    - name: wget -O - "{{ k8s_salt['haproxy_repo_key'] }}" | apt-key add -
+    - unless: apt-key list | grep -i 'haproxy'
 {% endif %}
 
 add_haproxy_repo:
 {% if grains['os_family'] == 'Debian' %}
   pkgrepo.managed:
     - humanname: HAProxy
-    - name: deb {{ k8s_salt['haproxy_proxy_repo'] }}/haproxy/{{ grains['os']|lower }}-{{ grains['oscodename']|lower }}/ {{ grains['oscodename']|lower }} main
+    - name: deb "{{ k8s_salt['haproxy_proxy_repo'] }}" {{ grains['oscodename']|lower }} main
     - dist: {{ grains['oscodename']|lower }}
     - gpgcheck: 1
-    - key_url: {{ k8s_salt['haproxy_proxy_repo'] }}/HAPROXY-key-community.asc
+    - key_url: "{{ k8s_salt['haproxy_repo_key'] }}"
     - require:
       - cmd: add_haproxy_repo_key
 {% else %}
