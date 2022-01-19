@@ -9,7 +9,11 @@ get_kubernetes_binaries:
   {% for binary in k8s_salt['k8s_binaries'] %}
     - /usr/local/bin/{{ binary }}:
       - source: {{ k8s_salt['k8s_proxy_repo'] }}/v{{ k8s_salt['version_kubernetes'] }}/bin/linux/{{ k8s_salt['arch'] }}/{{ binary }}
+    {% if not k8s_salt['k8s_binaries_skip_checksum'] %}
       - source_hash: {{ k8s_salt['k8s_proxy_repo'] }}/v{{ k8s_salt['version_kubernetes'] }}/bin/linux/{{ k8s_salt['arch'] }}/{{ binary }}.sha256
+    {% else %}
+      - replace: False
+    {% endif %}
       - user: root
       - mode: '0755'
       - makedirs: True

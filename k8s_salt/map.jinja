@@ -275,6 +275,13 @@
 {% do k8s_salt.update({'haproxy_proxy_repo':salt['pillar.get']('k8s_salt:haproxy_proxy_repo') or 'http://ppa.launchpad.net/vbernat/haproxy-2.4/ubuntu'}) %}
 {% do k8s_salt.update({'haproxy_repo_key':salt['pillar.get']('k8s_salt:haproxy_repo_key') or 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xcffb779aadc995e4f350a060505d97a41c61b9cd'}) %}
 
+# Ignore checksum (if necessary)
+{% do k8s_salt.update({'k8s_binaries_skip_checksum':salt['pillar.get']('k8s_salt:k8s_binaries_skip_checksum') or False}) %}
+{% do k8s_salt.update({'cni_skip_checksum':salt['pillar.get']('k8s_salt:cni_skip_checksum') or False}) %}
+{% do k8s_salt.update({'cni_skip_download':salt['pillar.get']('k8s_salt:cni_skip_download') or False}) %}
+{% do k8s_salt.update({'etcd_skip_checksum':salt['pillar.get']('k8s_salt:etcd_skip_checksum') or False}) %}
+{% do k8s_salt.update({'etcd_skip_download':salt['pillar.get']('k8s_salt:etcd_skip_download') or False}) %}
+
 # K8s binaries
 {% set binaries = [] %}
 {% if salt['pillar.get']('k8s_salt:roles:controlplane') %}
