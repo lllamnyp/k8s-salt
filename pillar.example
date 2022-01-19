@@ -115,7 +115,7 @@ k8s_salt:
 
   # Ignore checksum for k8s binaries. Useful for self-made distributions.
   # (optional)
-  k8s_binaries_ignore_distib_checksum: False
+  k8s_binaries_skip_checksum: False
 
   # Proxy repo when etcd in air-gapped environment
   # (optional)
@@ -123,7 +123,11 @@ k8s_salt:
 
   # Ignore checksum for etcd. Useful for self-made distributions.
   # (optional)
-  ectd_ignore_distib_checksum: False
+  ectd_skip_checksum: False
+
+  # Do not download etcd at all. Useful for self-made distributions.
+  # (optional)
+  ectd_skip_download: False
 
   # Proxy repo when cni in air-gapped environment
   # (optional)
@@ -131,7 +135,11 @@ k8s_salt:
 
   # Ignore checksum for CNI. Useful for self-made distributions.
   # (optional)
-  cni_ignore_distib_checksum: False
+  cni_skip_checksum: False
+
+  # Do not download CNI at all. Useful for self-made distributions.
+  # (optional)
+  cni_skip_download: False
 
   # Proxy repo when haproxy in air-gapped environment
   # (optional)
