@@ -272,7 +272,8 @@
 {% do k8s_salt.update({'k8s_proxy_repo':salt['pillar.get']('k8s_salt:k8s_proxy_repo') or 'https://storage.googleapis.com/kubernetes-release/release'}) %}
 {% do k8s_salt.update({'etcd_proxy_repo':salt['pillar.get']('k8s_salt:etcd_proxy_repo') or 'https://github.com/etcd-io/etcd/releases/download'}) %}
 {% do k8s_salt.update({'cni_proxy_repo':salt['pillar.get']('k8s_salt:cni_proxy_repo') or 'https://github.com/containernetworking/plugins/releases/download'}) %}
-{% do k8s_salt.update({'haproxy_proxy_repo':salt['pillar.get']('k8s_salt:haproxy_proxy_repo') or 'https://www.haproxy.com/download/haproxy/haproxy'}) %}
+{% do k8s_salt.update({'haproxy_proxy_repo':salt['pillar.get']('k8s_salt:haproxy_proxy_repo') or 'http://ppa.launchpad.net/vbernat/haproxy-2.4/ubuntu'}) %}
+{% do k8s_salt.update({'haproxy_repo_key':salt['pillar.get']('k8s_salt:haproxy_repo_key') or 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xcffb779aadc995e4f350a060505d97a41c61b9cd'}) %}
 
 # Ignore checksum (if necessary)
 {% do k8s_salt.update({'k8s_binaries_ignore_distib_checksum':salt['pillar.get']('k8s_salt:k8s_binaries_ignore_distib_checksum') or False}) %}
