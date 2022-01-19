@@ -2,12 +2,17 @@
 
 {% if k8s_salt and ('ip' in k8s_salt) %}
 {% if salt['pillar.get']('k8s_salt:roles:etcd') or salt['pillar.get']('k8s_salt:roles:admin') %}
+
+
+{% if not k8s_salt['etcd_skip_download'] %}
 get_etcd_archive:
   file.managed:
   - name: /data/etcd/etcd-{{ k8s_salt['version_etcd'] }}.tar.gz
   - source: {{ k8s_salt['etcd_proxy_repo'] }}/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}.tar.gz
-  {% if not k8s_salt['etcd_ignore_distib_checksum'] %}
+  {% if not k8s_salt['etcd_skip_checksum'] %}
   - source_hash: {{ k8s_salt['etcd_proxy_repo'] }}/{{ k8s_salt['version_etcd'] }}/SHA256SUMS
+  {% else %}
+  - replace: False
   {% endif %}
   - user: root
   - mode: '0644'
@@ -32,6 +37,10 @@ place_etcd_binaries:
       - source: /data/etcd/{{ k8s_salt['version_etcd'] }}/etcd-{{ k8s_salt['version_etcd'] }}-linux-{{ k8s_salt['arch'] }}/etcdctl
   - require:
     - unpack_etcd_archive
+{% else %}
+Get unpack or place etcd not needed:
+  test.nop
+{% endif %}
 
   {% set keys = ['etcd-trusted'] %}
   {% if salt['pillar.get']('k8s_salt:roles:etcd') %}

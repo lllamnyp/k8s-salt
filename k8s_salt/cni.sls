@@ -1,11 +1,13 @@
 {% from './map.jinja' import k8s_salt %}
-{% if 'arch' in k8s_salt and salt['pillar.get']('k8s_salt:roles:worker') and salt['pillar.get']('k8s_salt:install_loopback_plugin') %}
+{% if 'arch' in k8s_salt and salt['pillar.get']('k8s_salt:roles:worker') and salt['pillar.get']('k8s_salt:install_loopback_plugin') and not k8s_salt['cni_skip_download'] %}
 get_cni_archive:
   file.managed:
   - name: /data/cni/cni.tar.gz
   - source: {{ k8s_salt['cni_proxy_repo'] }}/{{ k8s_salt['version_cni'] }}/cni-plugins-linux-{{ k8s_salt['arch'] }}-{{ k8s_salt['version_cni'] }}.tgz
-  {% if not k8s_salt['cni_ignore_distib_checksum'] %}
+  {% if not k8s_salt['cni_skip_checksum'] %}
   - source_hash: {{ k8s_salt['cni_proxy_repo'] }}/{{ k8s_salt['version_cni'] }}/cni-plugins-linux-{{ k8s_salt['arch'] }}-{{ k8s_salt['version_cni'] }}.tgz.sha256
+  {% else %}
+  - replace: False
   {% endif %}
   - user: root
   - mode: '0644'
