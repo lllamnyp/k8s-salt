@@ -161,4 +161,8 @@ k8s_salt:
     # (optional)
     # effective default: as shown
     kubernetes: 1.21.0
-  
+
+    # Version of HAProxy to use
+    # (optional)
+    # effective default: as shown
+    haproxy: 2.4.*

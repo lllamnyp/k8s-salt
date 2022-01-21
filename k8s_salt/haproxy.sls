@@ -34,11 +34,11 @@ install_haproxy_package:
   pkg.installed:
   - name: haproxy
   - pkgs:
-    - haproxy: {{ pillar.version.haproxy or '2.4.*' }}
+    - haproxy: {{ k8s_salt['version_haproxy'] }}
   - hold: True
   - refresh: True
   - cache_valid_time: 86400 # 1 day
-  - version: {{ pillar.version.haproxy or '2.4.*' }}
+  - version: {{ k8s_salt['version_haproxy'] }}
   - require:
     - add_haproxy_repo
 
