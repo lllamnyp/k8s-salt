@@ -267,7 +267,7 @@
 {% do k8s_salt.update({'version_kubernetes':salt['pillar.get']('k8s_salt:version:kubernetes') or '1.21.0'}) %}
 {% do k8s_salt.update({'version_etcd':salt['pillar.get']('k8s_salt:version:etcd') or 'v3.4.15'}) %}
 {% do k8s_salt.update({'version_cni':salt['pillar.get']('k8s_salt:version:cni') or 'v0.9.1'}) %}
-{% do k8s_salt.update({'version_harpoxy':salt['pillar.get']('k8s_salt:version:harpoxy') or '2.4.*'}) %}
+{% do k8s_salt.update({'version_haproxy':salt['pillar.get']('k8s_salt:version:haproxy') or '2.4.*'}) %}
 
 # Proxy repos (if necessary)
 {% do k8s_salt.update({'k8s_proxy_repo':salt['pillar.get']('k8s_salt:k8s_proxy_repo') or 'https://storage.googleapis.com/kubernetes-release/release'}) %}
