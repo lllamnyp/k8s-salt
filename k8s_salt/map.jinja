@@ -23,10 +23,10 @@
 
 ### Check if it's worth even running the template
 {%- set cluster = salt['pillar.get']('k8s_salt:cluster') %}
-{%- set host_info = salt['pillar.get']('k8s_overdata:host_info') %}
+{%- set host_info = salt['pillar.get']('k8s_overdata:host_info', {}) %}
 
-{%- set etcd_ids = salt['pillar.get']('k8s_overdata:inverted_roles:'~cluster~':etcd') %}
-{%- set api_ids = salt['pillar.get']('k8s_overdata:inverted_roles:'~cluster~':controlplane') %}
+{%- set etcd_ids = salt['pillar.get']('k8s_overdata:inverted_roles:'~cluster~':etcd', []) %}
+{%- set api_ids = salt['pillar.get']('k8s_overdata:inverted_roles:'~cluster~':controlplane', []) %}
 {%- set etcd_info = {} %}
 {%- set api_info = {} %}
 
@@ -45,8 +45,8 @@
 {% for k, v in dict.items() %}{{ v[attribute1] }}{{ prefix }}{{ v[attribute2] }}{{ suffix }}{% if not loop.last %},{% endif %}{% endfor %}
 {%- endmacro %}
 
-{% do k8s_salt.update({'hostname_fqdn':salt['pillar.get']('k8s_overdata:host_info:'~id~':hostname_fqdn')}) %}
-{% do k8s_salt.update({'ip':salt['pillar.get']('k8s_overdata:host_info:'~id~':ip')}) %}
+{% do k8s_salt.update({'hostname_fqdn':salt['pillar.get']('k8s_overdata:host_info:'~id~':hostname_fqdn', "")}) %}
+{% do k8s_salt.update({'ip':salt['pillar.get']('k8s_overdata:host_info:'~id~':ip', "")}) %}
 
 # K8s cluster properties
 {% do k8s_salt.update({'service_cidr':salt['pillar.get']('k8s_salt:service_cidr') or '10.143.0.0/16'}) %}
@@ -261,7 +261,7 @@
 {% do k8s_salt.update({'allowed_minions':allowed_minions}) %}
 
 # CA server
-{% do k8s_salt.update({'ca_server':salt['pillar.get']('k8s_overdata:ca_server:id')}) %}
+{% do k8s_salt.update({'ca_server':salt['pillar.get']('k8s_overdata:ca_server:id', "")}) %}
 
 # Version info
 {% do k8s_salt.update({'version_kubernetes':salt['pillar.get']('k8s_salt:version:kubernetes') or '1.21.0'}) %}
