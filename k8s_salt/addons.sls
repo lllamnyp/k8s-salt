@@ -8,7 +8,7 @@ Deploy raw addon manifests:
   - mode: '0644'
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt.addons.manifests }}
+      k8s_salt: {{ k8s_salt.addons.manifests | yaml_encode }}
       cluster: {{ pillar.k8s_salt.cluster }}
   - names:
     - /tmp/dummy.yml
