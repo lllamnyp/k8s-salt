@@ -175,6 +175,16 @@ Deploy {{ cluster }} manifests:
   - require:
     - salt: Start {{ cluster }} adminbox
 
+Deploy {{ cluster }} addons:
+  salt.state:
+  - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:admin:True and I@k8s_salt:cluster:{{ cluster }}'
+  - tgt_type: compound
+  - sls:
+    - {{ slspath }}.addons
+  - pillar: *pillar
+  - require:
+    - salt: Start {{ cluster }} adminbox
+
 Start {{ cluster }} workers:
   salt.state:
   - tgt: 'I@k8s_salt:enabled:True and I@k8s_salt:roles:worker:True and I@k8s_salt:cluster:{{ cluster }}'
