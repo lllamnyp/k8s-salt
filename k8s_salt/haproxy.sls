@@ -67,8 +67,7 @@ place_haproxy_configuration:
       - template: 'jinja'
       - defaults:
 {% if cluster == 'csip5' %}
-  {% do salt.log.debug('printing k8s_salt for csip5') %}
-  {% do salt.log.debug(k8s_salt) %}
+  {% do salt.log.error(k8s_salt|json) %}
 {% endif %}
           k8s_salt: {{ k8s_salt | json }}
   x509.certificate_managed:
