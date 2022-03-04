@@ -25,7 +25,7 @@ place_kubeproxy_files:
   - makedirs: True
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: proxy
   - names:
     - /etc/kubernetes/config/proxy.kubeconfig:
@@ -50,7 +50,7 @@ place_kubeproxy_service:
   - mode: '0644'
   - template: jinja
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: kube-proxy
       description: Kubernetes Kube Proxy
       version: {{ k8s_salt['version_kubernetes'] }}

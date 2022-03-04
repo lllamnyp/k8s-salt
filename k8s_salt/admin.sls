@@ -14,7 +14,7 @@ Place admin kubeconfig:
       - mode: '0644'
       - template: 'jinja'
       - defaults:
-          k8s_salt: {{ k8s_salt }}
+          k8s_salt: {{ k8s_salt | json }}
 
 Kubeadmin private key:
   x509.private_key_managed:

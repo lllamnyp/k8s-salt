@@ -19,7 +19,7 @@ place_controller_files:
   - makedirs: True
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: controller
   - names:
     - /etc/kubernetes/config/controller.kubeconfig:
@@ -43,7 +43,7 @@ place_controller_service:
   - mode: '0644'
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: kube-controller-manager
       description: Kubernetes Controller Manager
       version: {{ k8s_salt['version_kubernetes'] }}

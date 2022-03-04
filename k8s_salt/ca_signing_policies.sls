@@ -8,7 +8,7 @@ Place signing policy on CA server:
       - source: salt://{{ slspath }}/templates/signing_policies.conf
       - template: jinja
       - defaults:
-          k8s_salt: {{ k8s_salt }}
+          k8s_salt: {{ k8s_salt | json }}
           clusters: {{ clusters }}
   cmd.run:
   - name: 'sleep 5; salt-call service.restart salt-minion'

@@ -26,7 +26,7 @@ place_scheduler_files:
   - makedirs: True
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: scheduler
   - names:
     - /etc/kubernetes/config/scheduler.kubeconfig:
@@ -52,7 +52,7 @@ place_scheduler_service:
   - mode: '0644'
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: kube-scheduler
       description: Kubernetes Scheduler
       version: {{ k8s_salt['version_kubernetes'] }}

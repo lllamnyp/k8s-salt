@@ -50,7 +50,7 @@ place_k8s_apiserver_service:
   - mode: '0644'
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: kube-apiserver
       description: Kubernetes API Server
       version: {{ k8s_salt['version_kubernetes'] }}

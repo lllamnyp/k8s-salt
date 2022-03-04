@@ -24,7 +24,7 @@ place_kubelet_files:
   file.managed:
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: kubelet
   - makedirs: True
   - names:
@@ -53,7 +53,7 @@ place_kubelet_service:
   - mode: '0644'
   - template: jinja
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       component: kubelet
       description: Kubernetes Node Agent
       version: {{ k8s_salt['version_kubernetes'] }}

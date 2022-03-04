@@ -85,7 +85,7 @@ place_etcd_service:
   - mode: '0644'
   - template: jinja
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
   module.run:
   - name: service.systemctl_reload
   - onchanges:

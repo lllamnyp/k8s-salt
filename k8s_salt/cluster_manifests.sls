@@ -8,7 +8,7 @@ Place cluster manifests:
   - mode: '0644'
   - template: 'jinja'
   - defaults:
-      k8s_salt: {{ k8s_salt }}
+      k8s_salt: {{ k8s_salt | json }}
       cluster: {{ pillar.k8s_salt.cluster }}
   - names:
     - /etc/kubernetes/cluster-wide-manifests/coredns.yml:

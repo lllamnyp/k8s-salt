@@ -70,7 +70,7 @@ place_haproxy_configuration:
   {% do salt.log.debug('printing k8s_salt for csip5') %}
   {% do salt.log.debug(k8s_salt) %}
 {% endif %}
-          k8s_salt: {{ k8s_salt }}
+          k8s_salt: {{ k8s_salt | json }}
   x509.certificate_managed:
   - makedirs: True
   - names:
