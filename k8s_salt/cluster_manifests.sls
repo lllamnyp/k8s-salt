@@ -13,7 +13,7 @@ Place cluster manifests:
   - names:
     - /etc/kubernetes/cluster-wide-manifests/coredns.yml:
       - source: salt://{{ slspath }}/cluster-wide-manifests/coredns.yml
-{% if k8s_salt['addons'].get('cilium', {}).get('enabled', False) %}
+{% if pillar.k8s_salt.addons.get('cilium', {}).get('enabled', False) %}
     - /etc/kubernetes/cluster-wide-manifests/cilium.yml:
       - source: salt://{{ slspath }}/cluster-wide-manifests/cilium.yml
 {% endif %}
@@ -23,7 +23,7 @@ Place cluster manifests:
   - names:
     - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/coredns.yml'
     - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/kubelet-access.yml'
-{% if k8s_salt['addons'].get('cilium', {}).get('enabled', False) %}
+{% if pillar.k8s_salt.addons.get('cilium', {}).get('enabled', False) %}
     - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/cilium.yml'
 {% endif %}
 #       - onchanges:

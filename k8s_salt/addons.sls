@@ -13,14 +13,14 @@ Deploy raw addon manifests:
       cluster: {{ pillar.k8s_salt.cluster }}
   - names:
     - /tmp/dummy.yml
-  {% for k, v in k8s_salt['addons'].get('manifests', {}).items() %}
+  {% for k, v in pillar.k8s_salt.addons.get('manifests', {}).items() %}
     - /etc/kubernetes/cluster-wide-manifests/{{ k }}.yml:
-      - contents: {{ pillar['k8s_salt']['addons']['manifests'][k] | yaml }}
+      - contents_pillar: k8s_salt:addons:manifests:{{ k }}
   {% endfor %}
   cmd.run:
   - names:
     - 'true'
-  {% for k, v in k8s_salt['addons'].get('manifests', {}).items() %}
+  {% for k, v in pillar.k8s_salt.addons.get('manifests', {}).items() %}
     - '/usr/local/bin/kubectl --kubeconfig /etc/kubernetes/config/admin.kubeconfig apply -f /etc/kubernetes/cluster-wide-manifests/{{ k }}.yml'
   {% endfor %}
 {% endif %}
