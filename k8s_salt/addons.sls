@@ -15,7 +15,7 @@ Deploy raw addon manifests:
     - /tmp/dummy.yml
   {% for k, v in k8s_salt['addons'].get('manifests', {}).items() %}
     - /etc/kubernetes/cluster-wide-manifests/{{ k }}.yml:
-      - contents: {{ pillar['k8s_salt']['addons']['manifests'][k] | yaml_encode }}
+      - contents: {{ pillar['k8s_salt']['addons']['manifests'][k] | yaml }}
   {% endfor %}
   cmd.run:
   - names:
