@@ -2,7 +2,6 @@
 
 {% if salt['pillar.get']('k8s_salt:roles:admin') %}
 
-{% do salt.log.error(k8s_salt.addons.manifests)%}
 Deploy raw addon manifests:
   file.managed:
   - makedirs: True
