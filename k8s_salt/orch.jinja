@@ -75,3 +75,10 @@
     {% endif %}
   {% endif %}
 {% endfor %}
+
+{% set global = {} %}
+{% for k, v in server_pillars.items() %}
+  {% if 'global' in v['k8s_salt'] %}
+    {% do global.update(v['k8s_salt']['global']) %}
+  {% endif %}
+{% endfor %}
