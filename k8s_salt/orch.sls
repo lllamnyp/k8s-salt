@@ -1,4 +1,4 @@
-{% from './orch.jinja' import inverted_roles, clusters, host_info, ca_server %}
+{% from './orch.jinja' import inverted_roles, clusters, host_info, ca_server, global %}
 
 Allow minions to request certs:
   file.managed:
@@ -140,8 +140,10 @@ Start {{ cluster }} haproxies:
   - pillar: *pillar
   - require:
     - salt: Run {{ cluster }} controlplane
+{% if not global.get('proceed_on_failed_cert_deployment', False) %}
     - salt: Python3 M2Crypto on {{ cluster }} workers
     - cmd: Allow minions to request certs
+{% endif %}
 
 Start {{ cluster }} adminbox:
   salt.state:
