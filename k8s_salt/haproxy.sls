@@ -78,6 +78,8 @@ place_haproxy_configuration:
       - basicConstraints: "critical CA:FALSE"
       - keyUsage: "critical Digital Signature, Key Encipherment"
       - extendedKeyUsage: "TLS Web Server Authentication, TLS Web Client Authentication"
+      - require:
+        - x509: Healthchecker private key
   cmd.run:
   - names:
     - 'cat /etc/kubernetes/pki/health-checker-key.pem /etc/kubernetes/pki/health-checker.pem > /etc/kubernetes/pki/health-checker-bundle.pem':
