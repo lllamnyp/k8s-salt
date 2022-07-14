@@ -44,6 +44,8 @@ place_scheduler_files:
       - keyUsage: "critical Digital Signature, Key Encipherment"
       - extendedKeyUsage: "TLS Web Server Authentication, TLS Web Client Authentication"
       - basicConstraints: "critical CA:FALSE"
+      - days_valid: 365
+      - days_remaining: 90
 
 place_scheduler_service:
   file.managed:

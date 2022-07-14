@@ -42,6 +42,8 @@ Kubeadmin X509 management:
           DNS:{{ k8s_salt['hostname_fqdn'] }},
           IP Address:127.0.0.1,
           IP Address:{{ k8s_salt['ip'] }}
+      - days_valid: 365
+      - days_remaining: 90
 
 ### End checks if state worth running
 {% endif %}

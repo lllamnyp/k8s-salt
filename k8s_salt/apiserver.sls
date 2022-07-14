@@ -41,6 +41,8 @@ Apiserver X509 management:
           DNS:kubernetes.default,
           DNS:kubernetes.default.svc,
           DNS:kubernetes.default.svc.{{ k8s_salt['cluster_domain'] }}{% endif %}{% endif %}
+      - days_valid: 365
+      - days_remaining: 90
   {% endfor %}
 
 place_k8s_apiserver_service:

@@ -35,6 +35,8 @@ place_controller_files:
       - signing_policy: {{ cluster }}_kube-ca
       - keyUsage: "critical Digital Signature, Key Encipherment"
       - extendedKeyUsage: "TLS Web Client Authentication"
+      - days_valid: 365
+      - days_remaining: 90
 
 place_controller_service:
   file.managed:

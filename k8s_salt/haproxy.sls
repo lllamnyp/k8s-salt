@@ -80,6 +80,8 @@ place_haproxy_configuration:
       - extendedKeyUsage: "TLS Web Server Authentication, TLS Web Client Authentication"
       - require:
         - x509: Healthchecker private key
+      - days_valid: 365
+      - days_remaining: 90
   cmd.run:
   - names:
     - 'cat /etc/kubernetes/pki/health-checker-key.pem /etc/kubernetes/pki/health-checker.pem > /etc/kubernetes/pki/health-checker-bundle.pem':

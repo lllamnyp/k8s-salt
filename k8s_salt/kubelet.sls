@@ -44,7 +44,8 @@ place_kubelet_files:
       - extendedKeyUsage: "TLS Web Server Authentication, TLS Web Client Authentication"
       - basicConstraints: "critical CA:FALSE"
       - subjectAltName: "DNS:{{ k8s_salt['hostname_fqdn'] }}, IP Address:{{ k8s_salt['ip'] }}"
-
+      - days_valid: 365
+      - days_remaining: 90
 
 place_kubelet_service:
   file.managed:
